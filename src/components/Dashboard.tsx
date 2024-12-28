@@ -242,11 +242,276 @@ const SettingsForm = ({ onSave, initialSettings, validationErrors }) => {
 
 const STORAGE_KEY = 'timeOffSettings';
 
+// Event Form Component
+const EventForm = ({ onCancel, onSubmit, initialData = null }) => {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [eventName, setEventName] = useState(initialData ? initialData.name : '');
+  const [dates, setDates] = useState({
+    startDate: initialData ? initialData.startDate : '',
+    endDate: initialData ? initialData.endDate : ''
+  });
+  const [allDays, setAllDays] = useState(initialData ? initialData.days : []);
+
+  const handleNextStep = () => {
+    if (eventName.trim()) {
+      setCurrentStep(2);
+    }
+  };
+
+  const handleDateSubmit = () => {
+    if (dates.startDate) {
+      const start = new Date(dates.startDate);
+      const end = dates.endDate ? new Date(dates.endDate) : new Date(dates.startDate);
+      const current = new Date(start);
+
+      const days = [];
+      while (current <= end) {
+        const isWeekend = current.getDay() === 0 || current.getDay() === 6;
+        days.push({
+          date: new Date(current),
+          isWeekend,
+          type: isWeekend ? 'weekend' : 'full'
+        });
+        current.setDate(current.getDate() + 1);
+      }
+
+      setAllDays(days);
+      setCurrentStep(3);
+    }
+  };
+
+  if (currentStep === 1) {
+    return (
+      <div className="p-6 max-w-sm mx-auto bg-white rounded-xl shadow-lg space-y-4">
+        <div className="mb-4">
+          <label className="block text-gray-700 mb-2">
+            Event Name:
+          </label>
+          <input
+            type="text"
+            value={eventName}
+            onChange={(e) => setEventName(e.target.value)}
+            className="w-full p-2 border rounded"
+            placeholder="Enter event name"
+          />
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={onCancel}
+            className="flex-1 bg-gray-500 hover:bg-gray-600 text-white p-2 rounded"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleNextStep}
+            className="flex-1 bg-blue-500 hover:bg-blue-600 text-white p-2 rounded"
+          >
+            Next Step
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (currentStep === 2) {
+    const today = new Date().toISOString().split('T')[0];
+    const validEndDate = dates.startDate ? dates.startDate : today;
+    const isEndDateValid = !dates.endDate || dates.endDate >= dates.startDate;
+
+    return (
+      <div className="p-6 max-w-sm mx-auto bg-white rounded-xl shadow-lg space-y-4">
+        <h2 className="text-xl font-semibold">Select Dates</h2>
+        <p className="text-gray-600">Event: {eventName}</p>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-gray-700 mb-2">
+              Start Date:
+            </label>
+            <input
+              type="date"
+              value={dates.startDate}
+              min={today}
+              onChange={(e) => {
+                setDates(prev => ({
+                  startDate: e.target.value,
+                  endDate: prev.endDate && e.target.value > prev.endDate ? e.target.value : prev.endDate
+                }));
+              }}
+              className="w-full p-2 border rounded"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-gray-700 mb-2">
+              End Date (Optional):
+            </label>
+            <input
+              type="date"
+              value={dates.endDate}
+              min={validEndDate}
+              onChange={(e) => setDates(prev => ({ ...prev, endDate: e.target.value }))}
+              className={`w-full p-2 border rounded ${!isEndDateValid ? 'border-red-500' : ''}`}
+            />
+            {!isEndDateValid && (
+              <p className="text-red-500 text-sm mt-1">End date cannot be before start date</p>
+            )}
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => setCurrentStep(1)}
+              className="flex-1 bg-gray-500 hover:bg-gray-600 text-white p-2 rounded"
+            >
+              Back
+            </button>
+            <button
+              onClick={handleDateSubmit}
+              disabled={!isEndDateValid}
+              className={`flex-1 p-2 rounded text-white ${
+                isEndDateValid 
+                  ? 'bg-blue-500 hover:bg-blue-600' 
+                  : 'bg-blue-300 cursor-not-allowed'
+              }`}
+            >
+              Next Step
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (currentStep === 3) {
+    const totalHours = allDays.reduce((acc, day) => {
+      if (day.isWeekend || day.type === 'holiday') return acc;
+      return acc + (day.type === 'full' ? 8 : 4);
+    }, 0);
+
+    return (
+      <div className="p-6 max-w-sm mx-auto bg-white rounded-xl shadow-lg space-y-4">
+        <h2 className="text-xl font-semibold">Configure Days</h2>
+        <p className="text-gray-600">Event: {eventName}</p>
+
+        <div className="space-y-4">
+          {allDays.map((day, index) => (
+            <div 
+              key={index} 
+              className={`flex items-center justify-between p-2 rounded ${
+                day.isWeekend ? 'bg-gray-100' : 
+                day.type === 'holiday' ? 'bg-blue-50' : 'bg-white border'
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                <span>{day.date.toLocaleDateString()}</span>
+                {day.isWeekend && (
+                  <span className="text-sm px-2 py-1 bg-gray-200 rounded text-gray-600">
+                    Weekend
+                  </span>
+                )}
+              </span>
+              {!day.isWeekend && (
+                <select
+                  value={day.type}
+                  onChange={(e) => {
+                    const newDays = [...allDays];
+                    newDays[index] = {
+                      ...newDays[index],
+                      type: e.target.value
+                    };
+                    setAllDays(newDays);
+                  }}
+                  className="ml-4 p-1 border rounded"
+                >
+                  <option value="full">Full Day</option>
+                  <option value="half">Half Day</option>
+                  <option value="holiday">Holiday</option>
+                </select>
+              )}
+            </div>
+          ))}
+
+          <div className="mt-4 p-3 bg-gray-50 rounded">
+            <p className="text-gray-700">Total PTO Hours: {totalHours}</p>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => setCurrentStep(2)}
+              className="flex-1 bg-gray-500 hover:bg-gray-600 text-white p-2 rounded"
+            >
+              Back
+            </button>
+            <button
+              onClick={() => {
+                const finalEvent = {
+                  name: eventName,
+                  startDate: dates.startDate,
+                  endDate: dates.endDate || dates.startDate,
+                  days: allDays,
+                  totalHours,
+                  created: new Date().toISOString()
+                };
+                onSubmit(finalEvent);
+              }}
+              className="flex-1 bg-green-500 hover:bg-green-600 text-white p-2 rounded"
+            >
+              Create Event
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+};
+
 const MainDashboard = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [settings, setSettings] = useState(null);
   const [events, setEvents] = useState([]);
   const [showEventForm, setShowEventForm] = useState(false);
+  const [editingEvent, setEditingEvent] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+
+  const addNewEvent = (event) => {
+    if (editingEvent) {
+      setEvents(prev => prev.map(e => 
+        e.created === editingEvent.created ? { ...event, created: e.created } : e
+      ));
+      setEditingEvent(null);
+    } else {
+      setEvents(prev => [...prev, event]);
+    }
+    setShowEventForm(false);
+  };
+
+  const handleEdit = (event) => {
+    setEditingEvent(event);
+    setShowEventForm(true);
+  };
+
+  const handleDelete = (event) => {
+    setShowDeleteConfirm(event);
+  };
+
+  const confirmDelete = () => {
+    setEvents(prev => prev.filter(e => e.created !== showDeleteConfirm.created));
+    setShowDeleteConfirm(null);
+  };
+
+  if (showEventForm) {
+    return (
+      <EventForm 
+        onCancel={() => {
+          setShowEventForm(false);
+          setEditingEvent(null);
+        }} 
+        onSubmit={addNewEvent}
+        initialData={editingEvent}
+      />
+    );
+  }
   
   useEffect(() => {
     const savedSettings = localStorage.getItem(STORAGE_KEY);
