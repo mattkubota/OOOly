@@ -1,4 +1,5 @@
-import Dashboard from './components/dashboard';
+import './App.css';
+import Dashboard from './components/Dashboard';
 
 function App() {
     return (
@@ -7,3 +8,5 @@ function App() {
         </div>
     );
 }
+
+export default App;
