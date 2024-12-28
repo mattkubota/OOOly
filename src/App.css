@@ -2,5 +2,47 @@
 @tailwind components;
 @tailwind utilities;
 
-main {
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+/* Base styles */
+body {
+  @apply bg-gray-50;
+}
+
+/* Input focus states */
+input:focus, select:focus {
+  @apply outline-none ring-2 ring-blue-500;
+}
+
+/* Transition effects */
+.fade-enter {
+  opacity: 0;
+}
+.fade-enter-active {
+  opacity: 1;
+  transition: opacity 200ms ease-in;
+}
+.fade-exit {
+  opacity: 1;
+}
+.fade-exit-active {
+  opacity: 0;
+  transition: opacity 200ms ease-in;
 }
