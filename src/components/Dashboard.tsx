@@ -246,6 +246,7 @@ const MainDashboard = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [settings, setSettings] = useState(null);
   const [events, setEvents] = useState([]);
+  const [showEventForm, setShowEventForm] = useState(false);
   
   useEffect(() => {
     const savedSettings = localStorage.getItem(STORAGE_KEY);
