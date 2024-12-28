@@ -1,9 +1,9 @@
-import './App.css'
+import Dashboard from './components/dashboard';
 
-export default function App() {
-  return (
-    <main>
-      React ⚛️ + Vite ⚡ + Replit 🌀
-    </main>
-  )
+function App() {
+    return (
+        <div className="App">
+            <Dashboard />
+        </div>
+    );
 }
