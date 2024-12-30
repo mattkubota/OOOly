@@ -86,6 +86,7 @@ const App: React.FC = () => {
           setEditingEvent(undefined);
         }}
         initialEvent={editingEvent}
+        existingEvents={events}
       />
     );
   }

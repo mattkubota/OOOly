@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
 import { Calendar } from 'lucide-react';
-import { PTOEvent, PTODay } from '../../types';
+import { PTOEvent, PTODay, DayType } from '../../types';
 import { isWeekend } from '../../utils/dateCalculations';
 
 interface EventFormProps {
   onSubmit: (event: PTOEvent) => void;
   onCancel: () => void;
-  initialEvent?: PTOEvent; // Make initialEvent optional
+  initialEvent?: PTOEvent;
+  existingEvents: PTOEvent[];
 }
 
 export const EventForm: React.FC<EventFormProps> = ({
   onSubmit,
   onCancel,
-  initialEvent
+  initialEvent,
+  existingEvents = []
 }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [eventName, setEventName] = useState(initialEvent?.name || '');
@@ -22,47 +24,85 @@ export const EventForm: React.FC<EventFormProps> = ({
   });
   const [days, setDays] = useState<PTODay[]>(initialEvent?.days || []);
 
+  const dayTypeLabels: Record<DayType, string> = {
+    'full': 'Full Day',
+    'half': 'Half Day',
+    'holiday': 'Holiday'
+  };
+
   const handleNextStep = () => {
     if (eventName.trim()) {
       setCurrentStep(2);
     }
   };
 
+  const checkOverlap = (newEvent: PTOEvent, existingEvents: PTOEvent[]) => {
+    const startDate = new Date(newEvent.startDate);
+    const endDate = new Date(newEvent.endDate || newEvent.startDate);
+
+    return existingEvents.some(event => {
+      if (event.created === initialEvent?.created) return false;
+      const eventStart = new Date(event.startDate);
+      const eventEnd = new Date(event.endDate || event.startDate);
+      return (
+        (startDate >= eventStart && startDate <= eventEnd) ||
+        (endDate >= eventStart && endDate <= eventEnd) ||
+        (startDate <= eventStart && endDate >= eventEnd)
+      );
+    });
+  };
+
   const handleDateSubmit = () => {
-    if (dates.startDate) {
-      // Split the date string and explicitly create date
-      const [year, month, day] = dates.startDate.split('-').map(Number);
-      const start = new Date(year, month - 1, day);  // month is 0-indexed
+   if (dates.startDate) {
+     const potentialEvent = {
+       name: eventName,
+       startDate: dates.startDate,
+       endDate: dates.endDate || dates.startDate,
+       days: [],
+       totalHours: 0,
+       created: initialEvent?.created || new Date().toISOString()
+     };
 
-      const end = dates.endDate 
-        ? (() => {
-            const [endYear, endMonth, endDay] = dates.endDate.split('-').map(Number);
-            return new Date(endYear, endMonth - 1, endDay);
-          })()
-        : start;
+     if (checkOverlap(potentialEvent, existingEvents)) {
+       alert("These dates overlap with an existing event. Please choose different dates.");
+       return;
+     }
 
-      const newDays: PTODay[] = [];
-      const current = new Date(start);
+     // Split the date string and explicitly create date
+     const [year, month, day] = dates.startDate.split('-').map(Number);
+     const start = new Date(year, month - 1, day);  // month is 0-indexed
 
-      while (current <= end) {
-        const dayIsWeekend = isWeekend(current);
-        newDays.push({
-          date: new Date(current),
-          type: dayIsWeekend ? 'weekend' : 'full',
-          isWeekend: dayIsWeekend
-        });
+     const end = dates.endDate 
+       ? (() => {
+           const [endYear, endMonth, endDay] = dates.endDate.split('-').map(Number);
+           return new Date(endYear, endMonth - 1, endDay);
+         })()
+       : start;
 
-        current.setDate(current.getDate() + 1);
-      }
+     const newDays: PTODay[] = [];
+     const current = new Date(start);
 
-      setDays(newDays);
-      setCurrentStep(3);
-    }
+     while (current <= end) {
+       const dayIsWeekend = isWeekend(current);
+       newDays.push({
+         date: new Date(current),
+         type: dayIsWeekend ? 'weekend' : 'full',
+         isWeekend: dayIsWeekend
+       });
+
+       current.setDate(current.getDate() + 1);
+     }
+
+     setDays(newDays);
+     setCurrentStep(3);
+   }
   };
 
   const calculateTotalHours = () => {
     return days.reduce((total, day) => {
       if (day.isWeekend || day.type === 'holiday') return total;
+      const adjustedDate = new Date(day.date);
+      adjustedDate.setMinutes(adjustedDate.getMinutes() + adjustedDate.getTimezoneOffset());
       return total + (day.type === 'full' ? 8 : 4);
     }, 0);
   };
@@ -224,14 +264,16 @@ export const EventForm: React.FC<EventFormProps> = ({
                 value={day.type}
                 onChange={(e) => {
                   const newDays = [...days];
-                  newDays[index].type = e.target.value as 'full' | 'half' | 'holiday';
+                  newDays[index].type = e.target.value as DayType;
                   setDays(newDays);
                 }}
                 className="ml-4 p-1 border rounded"
               >
-                <option value="full">Full Day</option>
-                <option value="half">Half Day</option>
-                <option value="holiday">Holiday</option>
+                {(Object.keys(dayTypeLabels) as DayType[]).map(type => (
+                  <option key={type} value={type}>
+                    {dayTypeLabels[type]}
+                  </option>
+                ))}
               </select>
             )}
           </div>

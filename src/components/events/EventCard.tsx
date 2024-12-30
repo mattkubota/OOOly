@@ -20,10 +20,17 @@ export const EventCard: React.FC<EventCardProps> = ({
   balanceValidation
 }) => {
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
+    const date = new Date(dateString);
+    date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
+    return date.toLocaleDateString();
   };
 
-  const workDays = event.days.filter(d => !d.isWeekend && d.type !== 'holiday').length;
+  const workDayCount = event.days
+    .filter(d => !d.isWeekend && d.type !== 'holiday')
+    .reduce((total, day) => total + (day.type === 'half' ? 0.5 : 1), 0);
+
+  const pluralize = (num: number, word: string) => 
+    `${num} ${word}${num === 1 ? '' : 's'}`;
 
   return (
     <div className="p-4 hover:bg-gray-50">
@@ -61,7 +68,7 @@ export const EventCard: React.FC<EventCardProps> = ({
       <div className="flex items-center justify-between mt-2">
         <div className="flex items-center gap-2 text-sm text-gray-500">
           <Clock size={16} />
-          <span>{workDays} work days ({event.totalHours} hours)</span>
+          <span>{pluralize(workDayCount, 'day')} ({pluralize(event.totalHours, 'hour')})</span>
         </div>
 
         <div className="flex items-center gap-3">

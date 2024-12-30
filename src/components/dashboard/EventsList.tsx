@@ -52,6 +52,10 @@ export const EventsList: React.FC<EventsListProps> = ({
     );
   }
 
+  const sortedEvents = events.sort((a, b) => 
+    new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+  );
+
   return (
     <>
       <div className="bg-white rounded-lg shadow">
@@ -59,7 +63,7 @@ export const EventsList: React.FC<EventsListProps> = ({
           <h2 className="text-xl font-semibold">Upcoming OOO</h2>
         </div>
         <div className="divide-y">
-          {events.map((event) => (
+          {sortedEvents.map((event) => (
             <EventCard 
               key={event.created}
               event={event}
