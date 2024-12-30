@@ -10,6 +10,7 @@ import { SettingsForm } from "./components/settings/SettingsForm";
 import { EventForm } from "./components/events/EventForm";
 
 import { usePTOEvents } from "./hooks/usePtoEvents";
+import { usePTOSettings } from './hooks/usePtoSettings';
 
 // Type imports
 import { PTOSettings, PTOEvent } from "./types";
@@ -20,18 +21,8 @@ const App: React.FC = () => {
   const [settings, setSettings] = useState<PTOSettings | null>(null);
   const [editingEvent, setEditingEvent] = useState<PTOEvent | undefined>(undefined);
 
-  const defaultSettings: PTOSettings = {
-    currentBalance: 0,
-    accrualRate: 0,
-    accrualPeriodType: 'biweekly',
-    lastAccrualDate: new Date().toISOString().split('T')[0],
-    hasMaxRollover: true,
-    maxRollover: 0,
-    hasMaxBalance: true,
-    maxBalance: 0
-  };
-
-  const { events, addEvent, updateEvent, deleteEvent } = usePTOEvents(settings || defaultSettings);
+  const { DEFAULT_SETTINGS } = usePTOSettings();
+  const { events, addEvent, updateEvent, deleteEvent } = usePTOEvents(settings || DEFAULT_SETTINGS);
 
   useEffect(() => {
     // Load settings from localStorage

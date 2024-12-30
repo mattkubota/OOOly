@@ -17,15 +17,6 @@ export function validateEventBalance(
   const [eventYear] = event.startDate.split('-').map(Number);
   const currentYear = new Date().getFullYear();
 
-  console.log('Event Date String:', event.startDate);
-  console.log('Parsed Event Year:', eventYear);
-  console.log('Current Year:', currentYear);
-
-  if (eventYear > currentYear && settings.maxRollover !== undefined) {
-    availableHours = Math.min(availableHours, settings.maxRollover);
-    console.log('Applied rollover limit:', availableHours);
-  }
-
   // Calculate accruals up to event start date
   const today = new Date();
   const eventStart = new Date(event.startDate);

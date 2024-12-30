@@ -32,6 +32,11 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
     };
   });
 
+  const [displayValues, setDisplayValues] = useState({
+    currentBalance: formData.currentBalance === 0 ? '' : formData.currentBalance.toString(),
+    accrualRate: formData.accrualRate === 0 ? '' : formData.accrualRate.toString()
+  });
+
   const [errors, setErrors] = useState<{
     currentBalance?: string;
     maxBalance?: string;
@@ -43,8 +48,8 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
       maxBalance?: string;
     } = {};
 
-    // Check if maxBalance has a value (including 0) and current balance exceeds it
-    if (formData.maxBalance !== undefined && formData.currentBalance > formData.maxBalance) {
+    // Only validate against maxBalance if it's not empty string (meaning it has a set value)
+    if (formData.maxBalance !== '' && formData.maxBalance !== undefined && formData.currentBalance > formData.maxBalance) {
       newErrors.currentBalance = 'Current balance cannot exceed maximum balance';
     }
 
@@ -54,11 +59,17 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
 
   const handleSaveClick = () => {
     if (validateForm()) {
-      // Preserve zeros but convert undefined to Infinity
-      onSave({
+      // Convert empty strings to undefined, then undefined to Infinity
+      const processedData = {
         ...formData,
-        maxRollover: formData.maxRollover ?? Infinity,
-        maxBalance: formData.maxBalance ?? Infinity
+        maxRollover: formData.maxRollover === '' ? undefined : formData.maxRollover,
+        maxBalance: formData.maxBalance === '' ? undefined : formData.maxBalance
+      };
+
+      onSave({
+        ...processedData,
+        maxRollover: processedData.maxRollover ?? Infinity,
+        maxBalance: processedData.maxBalance ?? Infinity
       });
     }
   };
@@ -75,23 +86,36 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
           <div>
             <label className="block mb-2">Current Balance (hours)</label>
             <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={formData.currentBalance}
+              type="text"
+              inputMode="decimal"
+              placeholder="e.g. 13.85"
+              value={displayValues.currentBalance}
               onChange={(e) => {
-                const value = Number(e.target.value);
-                setFormData(prev => ({
-                  ...prev,
-                  currentBalance: value
-                }));
-                // Clear current balance error when value changes
-                if (errors.currentBalance) {
-                  setErrors(prev => ({ ...prev, currentBalance: undefined }));
+                const value = e.target.value;
+                if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                  setDisplayValues(prev => ({
+                    ...prev,
+                    currentBalance: value
+                  }));
+                  setFormData(prev => ({
+                    ...prev,
+                    currentBalance: value === '' ? 0 : parseFloat(value || '0')
+                  }));
+                  if (errors.currentBalance) {
+                    setErrors(prev => ({ ...prev, currentBalance: undefined }));
+                  }
+                }
+              }}
+              onBlur={(e) => {
+                if (e.target.value === '') {
+                  setFormData(prev => ({
+                    ...prev,
+                    currentBalance: 0
+                  }));
                 }
               }}
               onFocus={(e) => e.target.select()}
-              className={`w-full p-2 border rounded ${errors.currentBalance ? 'border-red-500' : ''}`}
+              className={`w-full p-2 border rounded [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${errors.currentBalance ? 'border-red-500' : ''}`}
             />
             {errors.currentBalance && (
               <p className="text-red-500 text-sm mt-1">{errors.currentBalance}</p>
@@ -101,16 +125,33 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
           <div>
             <label className="block mb-2">Accrual Rate (hours per period)</label>
             <input
-              type="number"
-              min="0"
-              step="0.01"
-              value={formData.accrualRate}
-              onChange={(e) => setFormData(prev => ({
-                ...prev,
-                accrualRate: Number(e.target.value)
-              }))}
+              type="text"
+              inputMode="decimal"
+              placeholder="e.g. 2.77"
+              value={displayValues.accrualRate}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                  setDisplayValues(prev => ({
+                    ...prev,
+                    accrualRate: value
+                  }));
+                  setFormData(prev => ({
+                    ...prev,
+                    accrualRate: value === '' ? 0 : parseFloat(value || '0')
+                  }));
+                }
+              }}
+              onBlur={(e) => {
+                if (e.target.value === '') {
+                  setFormData(prev => ({
+                    ...prev,
+                    accrualRate: 0
+                  }));
+                }
+              }}
               onFocus={(e) => e.target.select()}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
           </div>
 
@@ -147,20 +188,22 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
           <div>
             <label className="block mb-2">Maximum Rollover Hours</label>
             <input
-              type="number"
-              min="0"
-              step="1"
+              type="text"
+              inputMode="decimal"
               value={formData.maxRollover === undefined ? '' : formData.maxRollover}
               onChange={(e) => {
-                const value = e.target.value === '' ? undefined : Math.floor(Number(e.target.value));
-                setFormData(prev => ({
-                  ...prev,
-                  maxRollover: value,
-                  hasMaxRollover: value > 0
-                }));
+                const value = e.target.value;
+                if (value === '' || /^\d*$/.test(value)) {
+                  const parsedValue = value === '' ? undefined : parseInt(value);
+                  setFormData(prev => ({
+                    ...prev,
+                    maxRollover: parsedValue,
+                    hasMaxRollover: parsedValue !== undefined && parsedValue > 0
+                  }));
+                }
               }}
               onFocus={(e) => e.target.select()}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               placeholder="No maximum"
             />
           </div>
@@ -168,32 +211,34 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
           <div>
             <label className="block mb-2">Maximum Balance</label>
             <input
-              type="number"
-              min="0"
-              step="1"
+              type="text"
+              inputMode="decimal"
               value={formData.maxBalance === undefined ? '' : formData.maxBalance}
               onChange={(e) => {
-                const value = e.target.value === '' ? undefined : Math.floor(Number(e.target.value));
-                setFormData(prev => ({
-                  ...prev,
-                  maxBalance: value,
-                  hasMaxBalance: value !== undefined
-                }));
-                // Validate current balance against new max balance
-                if (value !== undefined && formData.currentBalance > value) {
-                  setErrors(prev => ({
+                const value = e.target.value;
+                if (value === '' || /^\d*$/.test(value)) {
+                  const parsedValue = value === '' ? undefined : parseInt(value);
+                  setFormData(prev => ({
                     ...prev,
-                    currentBalance: 'Current balance cannot exceed maximum balance'
+                    maxBalance: parsedValue,
+                    hasMaxBalance: parsedValue !== undefined
                   }));
-                } else {
-                  setErrors(prev => ({
-                    ...prev,
-                    currentBalance: undefined
-                  }));
+                  // Validate current balance against new max balance
+                  if (parsedValue !== undefined && formData.currentBalance > parsedValue) {
+                    setErrors(prev => ({
+                      ...prev,
+                      currentBalance: 'Current balance cannot exceed maximum balance'
+                    }));
+                  } else {
+                    setErrors(prev => ({
+                      ...prev,
+                      currentBalance: undefined
+                    }));
+                  }
                 }
               }}
               onFocus={(e) => e.target.select()}
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               placeholder="No maximum"
             />
           </div>
