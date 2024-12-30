@@ -37,9 +37,6 @@ export const EventCard: React.FC<EventCardProps> = ({
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-            {event.totalHours} hours
-          </span>
           <div className="flex gap-2">
             {onEdit && (
               <button 
@@ -64,7 +61,7 @@ export const EventCard: React.FC<EventCardProps> = ({
       <div className="flex items-center justify-between mt-2">
         <div className="flex items-center gap-2 text-sm text-gray-500">
           <Clock size={16} />
-          <span>{workDays} work days</span>
+          <span>{workDays} work days ({event.totalHours} hours)</span>
         </div>
 
         <div className="flex items-center gap-3">

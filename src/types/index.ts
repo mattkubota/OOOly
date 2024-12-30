@@ -1,9 +1,9 @@
-export type PayPeriodType = 'biweekly' | 'semi-monthly';
+export type AccrualPeriodType = 'weekly' | 'biweekly' | 'semi-monthly';
 
 export interface PTOSettings {
   currentBalance: number;
   accrualRate: number;
-  payPeriodType: PayPeriodType;
+  accrualPeriodType: AccrualPeriodType;
   lastAccrualDate: string;
   hasMaxRollover: boolean;
   maxRollover: number;

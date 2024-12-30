@@ -22,7 +22,7 @@ export function validateEventBalance(
     const payPeriods = calculatePayPeriodsBetweenDates(
       today.toISOString(),
       event.startDate,
-      settings.payPeriodType
+      settings.accrualPeriodType
     );
 
     const accruedHours = payPeriods * settings.accrualRate;

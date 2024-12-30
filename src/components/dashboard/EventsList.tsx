@@ -36,16 +36,16 @@ export const EventsList: React.FC<EventsListProps> = ({
     return (
       <div className="bg-white rounded-lg shadow">
         <div className="border-b p-4">
-          <h2 className="text-xl font-semibold">Upcoming Time Off</h2>
+          <h2 className="text-xl font-semibold">Upcoming OOO</h2>
         </div>
         <div className="p-8 text-center text-gray-500">
           <Calendar size={48} className="mx-auto mb-4 text-gray-400" />
-          <p>No upcoming time off planned</p>
+          <p>No upcoming OOO planned</p>
           <button
             onClick={onAddFirst}
             className="mt-4 text-blue-500 hover:text-blue-600"
           >
-            Plan your first time off
+            Plan your first OOO
           </button>
         </div>
       </div>
@@ -56,7 +56,7 @@ export const EventsList: React.FC<EventsListProps> = ({
     <>
       <div className="bg-white rounded-lg shadow">
         <div className="border-b p-4">
-          <h2 className="text-xl font-semibold">Upcoming Time Off</h2>
+          <h2 className="text-xl font-semibold">Upcoming OOO</h2>
         </div>
         <div className="divide-y">
           {events.map((event) => (
@@ -78,7 +78,7 @@ export const EventsList: React.FC<EventsListProps> = ({
             <div className="flex gap-2 items-start text-red-600 mb-4">
               <AlertCircle />
               <div>
-                <h3 className="font-semibold mb-2">Delete Time Off Event</h3>
+                <h3 className="font-semibold mb-2">Delete OOO Event</h3>
                 <p className="text-gray-600">
                   Are you sure you want to delete "{showDeleteConfirm.name}"? 
                   This action cannot be undone.

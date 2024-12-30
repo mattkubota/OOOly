@@ -1,33 +1,33 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Calendar, Clock, AlertCircle, Settings } from 'lucide-react';
-import './App.css';
+import React, { useState, useEffect } from "react";
+import { Plus, Calendar, Clock, AlertCircle, Settings } from "lucide-react";
+import "./App.css";
 
 // Component imports will go here
-import { DashboardHeader } from './components/dashboard/DashboardHeader';
-import { SummaryCards } from './components/dashboard/SummaryCards';
-import { EventsList } from './components/dashboard/EventsList';
-import { SettingsForm } from './components/settings/SettingsForm';
-import { EventForm } from './components/events/EventForm';
+import { DashboardHeader } from "./components/dashboard/DashboardHeader";
+import { SummaryCards } from "./components/dashboard/SummaryCards";
+import { EventsList } from "./components/dashboard/EventsList";
+import { SettingsForm } from "./components/settings/SettingsForm";
+import { EventForm } from "./components/events/EventForm";
 
 // Type imports
-import { PTOSettings, PTOEvent } from './types';
+import { PTOSettings, PTOEvent } from "./types";
 
 const App: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [showEventForm, setShowEventForm] = useState(false);
   const [settings, setSettings] = useState<PTOSettings | null>(null);
   const [events, setEvents] = useState<PTOEvent[]>([]);
-  const [editingEvent, setEditingEvent] = useState<PTOEvent | null>(null);
+  const [editingEvent, setEditingEvent] = useState<PTOEvent | undefined>(undefined);
 
   useEffect(() => {
     // Load settings from localStorage
-    const savedSettings = localStorage.getItem('timeOffSettings');
+    const savedSettings = localStorage.getItem("timeOffSettings");
     if (savedSettings) {
       setSettings(JSON.parse(savedSettings));
     }
 
     // Load events from localStorage
-    const savedEvents = localStorage.getItem('timeOffEvents');
+    const savedEvents = localStorage.getItem("timeOffEvents");
     if (savedEvents) {
       setEvents(JSON.parse(savedEvents));
     }
@@ -35,14 +35,14 @@ const App: React.FC = () => {
 
   const handleSaveSettings = (newSettings: PTOSettings) => {
     setSettings(newSettings);
-    localStorage.setItem('timeOffSettings', JSON.stringify(newSettings));
+    localStorage.setItem("timeOffSettings", JSON.stringify(newSettings));
     setShowSettings(false);
   };
 
   const handleSaveEvent = (event: PTOEvent) => {
     let updatedEvents;
     if (editingEvent) {
-      updatedEvents = events.map(e => 
+      updatedEvents = events.map((e) =>
         e.created === editingEvent.created ? event : e
       );
     } else {
@@ -50,17 +50,21 @@ const App: React.FC = () => {
     }
 
     setEvents(updatedEvents);
-    localStorage.setItem('timeOffEvents', JSON.stringify(updatedEvents));
+    localStorage.setItem("timeOffEvents", JSON.stringify(updatedEvents));
     setShowEventForm(false);
-    setEditingEvent(null);
+    setEditingEvent(undefined);
   };
 
   if (!settings) {
     return (
       <div className="max-w-4xl mx-auto p-6">
         <div className="text-center">
-          <h2 className="text-xl font-semibold mb-4">Welcome to Time Off Planner</h2>
-          <p className="mb-4">Please set up your time off settings to get started.</p>
+          <h2 className="text-xl font-semibold mb-4">
+            Welcome to OOOly
+          </h2>
+          <p className="mb-4">
+            Please set up your OOO benefit details to get started.
+          </p>
           <SettingsForm onSave={handleSaveSettings} />
         </div>
       </div>
@@ -68,16 +72,18 @@ const App: React.FC = () => {
   }
 
   if (showSettings) {
-    return <SettingsForm onSave={handleSaveSettings} initialSettings={settings} />;
+    return (
+      <SettingsForm onSave={handleSaveSettings} initialSettings={settings} />
+    );
   }
 
   if (showEventForm) {
     return (
-      <EventForm 
+      <EventForm
         onSubmit={handleSaveEvent}
         onCancel={() => {
           setShowEventForm(false);
-          setEditingEvent(null);
+          setEditingEvent(undefined);
         }}
         initialEvent={editingEvent}
       />
@@ -90,28 +96,30 @@ const App: React.FC = () => {
   };
 
   const handleDeleteEvent = (eventToDelete: PTOEvent) => {
-    const updatedEvents = events.filter(e => e.created !== eventToDelete.created);
+    const updatedEvents = events.filter(
+      (e) => e.created !== eventToDelete.created
+    );
     setEvents(updatedEvents);
-    localStorage.setItem('timeOffEvents', JSON.stringify(updatedEvents));
+    localStorage.setItem("timeOffEvents", JSON.stringify(updatedEvents));
   };
 
   return (
     <div className="max-w-4xl mx-auto p-6">
-      <DashboardHeader 
+      <DashboardHeader
         onOpenSettings={() => setShowSettings(true)}
         onAddEvent={() => {
-          setEditingEvent(null);
+          setEditingEvent(undefined);
           setShowEventForm(true);
         }}
       />
 
       <SummaryCards settings={settings} />
 
-      <EventsList 
+      <EventsList
         events={events}
         settings={settings}
         onAddFirst={() => {
-          setEditingEvent(null);
+          setEditingEvent(undefined);
           setShowEventForm(true);
         }}
         onEdit={handleEditEvent}

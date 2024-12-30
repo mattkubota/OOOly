@@ -6,7 +6,7 @@ import { isWeekend } from '../../utils/dateCalculations';
 interface EventFormProps {
   onSubmit: (event: PTOEvent) => void;
   onCancel: () => void;
-  initialEvent?: PTOEvent;
+  initialEvent?: PTOEvent; // Make initialEvent optional
 }
 
 export const EventForm: React.FC<EventFormProps> = ({
@@ -84,7 +84,7 @@ export const EventForm: React.FC<EventFormProps> = ({
       <div className="p-6 max-w-sm mx-auto bg-white rounded-xl shadow-lg space-y-4">
         <div className="flex items-center gap-2 mb-4">
           <Calendar className="h-6 w-6 text-blue-500" />
-          <h2 className="text-xl font-semibold">Plan Time Off</h2>
+          <h2 className="text-xl font-semibold">Plan OOO</h2>
         </div>
 
         <div>

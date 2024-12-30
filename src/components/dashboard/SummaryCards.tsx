@@ -17,12 +17,12 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({ settings }) => {
         <div className="p-4">
           <h2 className="text-gray-600 mb-2">Accrual Rate</h2>
           <div className="text-2xl font-bold">{settings.accrualRate} hours</div>
-          <div className="text-sm text-gray-500">per {settings.payPeriodType} period</div>
+          <div className="text-sm text-gray-500">per {settings.accrualPeriodType} period</div>
         </div>
         <div className="p-4">
           <h2 className="text-gray-600 mb-2">Next Accrual</h2>
           <div className="text-2xl font-bold">
-            {calculateNextAccrualDate(settings.lastAccrualDate, settings.payPeriodType)
+            {calculateNextAccrualDate(settings.lastAccrualDate, settings.accrualPeriodType)
               .toLocaleDateString()}
           </div>
         </div>

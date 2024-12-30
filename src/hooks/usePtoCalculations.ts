@@ -5,8 +5,8 @@ import { calculateYearEndProjection } from '../utils/ptoCalculations';
 
 export function usePTOCalculations(settings: PTOSettings, events: PTOEvent[]) {
   const nextAccrual = useMemo(() => 
-    calculateNextAccrualDate(settings.lastAccrualDate, settings.payPeriodType),
-    [settings.lastAccrualDate, settings.payPeriodType]
+    calculateNextAccrualDate(settings.lastAccrualDate, settings.accrualPeriodType),
+    [settings.lastAccrualDate, settings.accrualPeriodType]
   );
 
   const yearEndProjection = useMemo(() => 

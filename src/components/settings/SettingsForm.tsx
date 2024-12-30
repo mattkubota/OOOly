@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Settings } from 'lucide-react';
-import { PTOSettings } from '../../types';
+import { PTOSettings, AccrualPeriodType } from '../../types';
 
 interface SettingsFormProps {
   onSave: (settings: PTOSettings) => void;
@@ -14,7 +14,7 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
   const [formData, setFormData] = useState<PTOSettings>(initialSettings || {
     currentBalance: 0,
     accrualRate: 0,
-    payPeriodType: 'biweekly',
+    accrualPeriodType: 'biweekly',
     lastAccrualDate: new Date().toISOString().split('T')[0],
     hasMaxRollover: true,
     maxRollover: 0,
@@ -57,7 +57,7 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center gap-2 mb-6">
           <Settings className="h-6 w-6 text-blue-500" />
-          <h2 className="text-xl font-semibold">Time Off Settings</h2>
+          <h2 className="text-xl font-semibold">OOOly Settings</h2>
         </div>
 
         <div className="space-y-4">
@@ -106,13 +106,14 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
           <div>
             <label className="block mb-2">Pay Period Type</label>
             <select
-              value={formData.payPeriodType}
+              value={formData.accrualPeriodType}
               onChange={(e) => setFormData(prev => ({
                 ...prev,
-                payPeriodType: e.target.value as 'biweekly' | 'semi-monthly'
+                accrualPeriodType: e.target.value as AccrualPeriodType
               }))}
               className="w-full p-2 border rounded"
             >
+              <option value="weekly">Weekly</option>
               <option value="biweekly">Biweekly</option>
               <option value="semi-monthly">Semi-monthly</option>
             </select>

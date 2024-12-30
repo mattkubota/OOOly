@@ -5,7 +5,7 @@ import { useLocalStorage } from './useLocalStorage';
 const DEFAULT_SETTINGS: PTOSettings = {
   currentBalance: 0,
   accrualRate: 0,
-  payPeriodType: 'biweekly',
+  accrualPeriodType: 'biweekly',
   lastAccrualDate: new Date().toISOString().split('T')[0],
   hasMaxRollover: true,
   maxRollover: 0,

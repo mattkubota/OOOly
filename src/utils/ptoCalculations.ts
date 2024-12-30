@@ -18,7 +18,7 @@ export const calculateAvailableHours = (
   const payPeriodsUntilEvent = calculatePayPeriodsBetweenDates(
     today.toISOString(),
     event.startDate,
-    settings.payPeriodType
+    settings.accrualPeriodType
   );
   
   availableHours += (payPeriodsUntilEvent * settings.accrualRate);
@@ -66,7 +66,7 @@ export const calculateYearEndProjection = (
   const remainingPayPeriods = calculatePayPeriodsBetweenDates(
     today.toISOString(),
     yearEnd.toISOString(),
-    settings.payPeriodType
+    settings.accrualPeriodType
   );
   
   const projectedAccrual = remainingPayPeriods * settings.accrualRate;
