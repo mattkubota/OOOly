@@ -9,6 +9,8 @@ import { EventsList } from "./components/dashboard/EventsList";
 import { SettingsForm } from "./components/settings/SettingsForm";
 import { EventForm } from "./components/events/EventForm";
 
+import { usePTOEvents } from "./hooks/usePtoEvents";
+
 // Type imports
 import { PTOSettings, PTOEvent } from "./types";
 
@@ -16,20 +18,26 @@ const App: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [showEventForm, setShowEventForm] = useState(false);
   const [settings, setSettings] = useState<PTOSettings | null>(null);
-  const [events, setEvents] = useState<PTOEvent[]>([]);
   const [editingEvent, setEditingEvent] = useState<PTOEvent | undefined>(undefined);
+
+  const defaultSettings: PTOSettings = {
+    currentBalance: 0,
+    accrualRate: 0,
+    accrualPeriodType: 'biweekly',
+    lastAccrualDate: new Date().toISOString().split('T')[0],
+    hasMaxRollover: true,
+    maxRollover: 0,
+    hasMaxBalance: true,
+    maxBalance: 0
+  };
+
+  const { events, addEvent, updateEvent, deleteEvent } = usePTOEvents(settings || defaultSettings);
 
   useEffect(() => {
     // Load settings from localStorage
     const savedSettings = localStorage.getItem("timeOffSettings");
     if (savedSettings) {
       setSettings(JSON.parse(savedSettings));
-    }
-
-    // Load events from localStorage
-    const savedEvents = localStorage.getItem("timeOffEvents");
-    if (savedEvents) {
-      setEvents(JSON.parse(savedEvents));
     }
   }, []);
 
@@ -40,19 +48,22 @@ const App: React.FC = () => {
   };
 
   const handleSaveEvent = (event: PTOEvent) => {
-    let updatedEvents;
     if (editingEvent) {
-      updatedEvents = events.map((e) =>
-        e.created === editingEvent.created ? event : e
-      );
+      updateEvent(event);
     } else {
-      updatedEvents = [...events, event];
+      addEvent(event);
     }
-
-    setEvents(updatedEvents);
-    localStorage.setItem("timeOffEvents", JSON.stringify(updatedEvents));
     setShowEventForm(false);
     setEditingEvent(undefined);
+  };
+
+  const handleEditEvent = (eventToEdit: PTOEvent) => {
+    setEditingEvent(eventToEdit);
+    setShowEventForm(true);
+  };
+
+  const handleDeleteEvent = (eventToDelete: PTOEvent) => {
+    deleteEvent(eventToDelete);
   };
 
   if (!settings) {
@@ -90,19 +101,6 @@ const App: React.FC = () => {
       />
     );
   }
-
-  const handleEditEvent = (eventToEdit: PTOEvent) => {
-    setEditingEvent(eventToEdit);
-    setShowEventForm(true);
-  };
-
-  const handleDeleteEvent = (eventToDelete: PTOEvent) => {
-    const updatedEvents = events.filter(
-      (e) => e.created !== eventToDelete.created
-    );
-    setEvents(updatedEvents);
-    localStorage.setItem("timeOffEvents", JSON.stringify(updatedEvents));
-  };
 
   return (
     <div className="max-w-4xl mx-auto p-6">

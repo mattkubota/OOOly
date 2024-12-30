@@ -11,15 +11,25 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
   onSave, 
   initialSettings 
 }) => {
-  const [formData, setFormData] = useState<PTOSettings>(initialSettings || {
-    currentBalance: 0,
-    accrualRate: 0,
-    accrualPeriodType: 'biweekly',
-    lastAccrualDate: new Date().toISOString().split('T')[0],
-    hasMaxRollover: true,
-    maxRollover: 0,
-    hasMaxBalance: true,
-    maxBalance: 0
+  const [formData, setFormData] = useState<PTOSettings>(() => {
+    if (initialSettings) {
+      return {
+        ...initialSettings,
+        // Convert Infinity to undefined but preserve 0
+        maxRollover: initialSettings.maxRollover === Infinity ? undefined : initialSettings.maxRollover,
+        maxBalance: initialSettings.maxBalance === Infinity ? undefined : initialSettings.maxBalance
+      };
+    }
+    return {
+      currentBalance: 0,
+      accrualRate: 0,
+      accrualPeriodType: 'biweekly',
+      lastAccrualDate: new Date().toISOString().split('T')[0],
+      hasMaxRollover: false,
+      maxRollover: undefined,
+      hasMaxBalance: false,
+      maxBalance: undefined
+    };
   });
 
   const [errors, setErrors] = useState<{
@@ -33,8 +43,8 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
       maxBalance?: string;
     } = {};
 
-    // Validate current balance against max balance
-    if (formData.hasMaxBalance && formData.currentBalance > formData.maxBalance) {
+    // Check if maxBalance has a value (including 0) and current balance exceeds it
+    if (formData.maxBalance !== undefined && formData.currentBalance > formData.maxBalance) {
       newErrors.currentBalance = 'Current balance cannot exceed maximum balance';
     }
 
@@ -44,10 +54,11 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
 
   const handleSaveClick = () => {
     if (validateForm()) {
+      // Preserve zeros but convert undefined to Infinity
       onSave({
         ...formData,
-        maxRollover: formData.hasMaxRollover ? formData.maxRollover : Infinity,
-        maxBalance: formData.hasMaxBalance ? formData.maxBalance : Infinity
+        maxRollover: formData.maxRollover ?? Infinity,
+        maxBalance: formData.maxBalance ?? Infinity
       });
     }
   };
@@ -104,7 +115,7 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
           </div>
 
           <div>
-            <label className="block mb-2">Pay Period Type</label>
+            <label className="block mb-2">Accrual Period Type</label>
             <select
               value={formData.accrualPeriodType}
               onChange={(e) => setFormData(prev => ({
@@ -134,87 +145,57 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
           </div>
 
           <div>
-            <div className="flex justify-between mb-2">
-              <label>Maximum Rollover Hours</label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={!formData.hasMaxRollover}
-                  onChange={(e) => setFormData(prev => ({
-                    ...prev,
-                    hasMaxRollover: !e.target.checked
-                  }))}
-                />
-                No Maximum
-              </label>
-            </div>
-            {formData.hasMaxRollover && (
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.maxRollover}
-                onChange={(e) => setFormData(prev => ({
+            <label className="block mb-2">Maximum Rollover Hours</label>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={formData.maxRollover === undefined ? '' : formData.maxRollover}
+              onChange={(e) => {
+                const value = e.target.value === '' ? undefined : Math.floor(Number(e.target.value));
+                setFormData(prev => ({
                   ...prev,
-                  maxRollover: Number(e.target.value)
-                }))}
-                onFocus={(e) => e.target.select()}
-                className="w-full p-2 border rounded"
-              />
-            )}
+                  maxRollover: value,
+                  hasMaxRollover: value > 0
+                }));
+              }}
+              onFocus={(e) => e.target.select()}
+              className="w-full p-2 border rounded"
+              placeholder="No maximum"
+            />
           </div>
 
           <div>
-            <div className="flex justify-between mb-2">
-              <label>Maximum Balance</label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={!formData.hasMaxBalance}
-                  onChange={(e) => {
-                    const newHasMaxBalance = !e.target.checked;
-                    setFormData(prev => ({
-                      ...prev,
-                      hasMaxBalance: newHasMaxBalance,
-                      // Clear any current balance error if no max balance
-                      ...(newHasMaxBalance ? {} : { currentBalance: Math.min(prev.currentBalance, Infinity) })
-                    }));
-                    // Clear any previous errors
-                    setErrors(prev => ({ ...prev, currentBalance: undefined }));
-                  }}
-                />
-                No Maximum
-              </label>
-            </div>
-            {formData.hasMaxBalance && (
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.maxBalance}
-                onChange={(e) => {
-                  const newMaxBalance = Number(e.target.value);
-                  setFormData(prev => ({
+            <label className="block mb-2">Maximum Balance</label>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              value={formData.maxBalance === undefined ? '' : formData.maxBalance}
+              onChange={(e) => {
+                const value = e.target.value === '' ? undefined : Math.floor(Number(e.target.value));
+                setFormData(prev => ({
+                  ...prev,
+                  maxBalance: value,
+                  hasMaxBalance: value !== undefined
+                }));
+                // Validate current balance against new max balance
+                if (value !== undefined && formData.currentBalance > value) {
+                  setErrors(prev => ({
                     ...prev,
-                    maxBalance: newMaxBalance
+                    currentBalance: 'Current balance cannot exceed maximum balance'
                   }));
-                  // Validate current balance against new max balance
-                  if (formData.currentBalance > newMaxBalance) {
-                    setErrors(prev => ({
-                      ...prev,
-                      currentBalance: 'Current balance cannot exceed maximum balance'
-                    }));
-                  } else {
-                    setErrors(prev => ({
-                      ...prev,
-                      currentBalance: undefined
-                    }));
-                  }
-                }}
-                onFocus={(e) => e.target.select()}
-                className="w-full p-2 border rounded"
-              />
-            )}
+                } else {
+                  setErrors(prev => ({
+                    ...prev,
+                    currentBalance: undefined
+                  }));
+                }
+              }}
+              onFocus={(e) => e.target.select()}
+              className="w-full p-2 border rounded"
+              placeholder="No maximum"
+            />
           </div>
 
           <button 

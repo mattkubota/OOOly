@@ -47,7 +47,13 @@ export function usePTOSettings() {
 
   const updateSettings = useCallback((newSettings: PTOSettings) => {
     if (validateSettings(newSettings)) {
-      setSettings(newSettings);
+      // Convert empty/undefined values to 0 when saving
+      const settingsToSave = {
+        ...newSettings,
+        maxRollover: newSettings.maxRollover ?? 0,
+        maxBalance: newSettings.maxBalance ?? 0
+      };
+      setSettings(settingsToSave);
       return true;
     }
     return false;
