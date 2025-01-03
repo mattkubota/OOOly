@@ -1,3 +1,5 @@
+// update maxBalance and maxRollover to not have an undefined value
+
 export type AccrualPeriodType = 'weekly' | 'biweekly' | 'semi-monthly';
 
 export interface PTOSettings {

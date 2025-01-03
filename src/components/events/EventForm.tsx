@@ -25,9 +25,10 @@ export const EventForm: React.FC<EventFormProps> = ({
   const [days, setDays] = useState<PTODay[]>(initialEvent?.days || []);
 
   const dayTypeLabels: Record<DayType, string> = {
-    'full': 'Full Day',
-    'half': 'Half Day',
-    'holiday': 'Holiday'
+    full: "Full Day",
+    half: "Half Day",
+    holiday: "Holiday",
+    weekend: "Weekend"
   };
 
   const handleNextStep = () => {
