@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { PTOSettings } from '../types';
 import { useLocalStorage } from './useLocalStorage';
 
-const DEFAULT_SETTINGS: PTOSettings = {
+export const DEFAULT_SETTINGS: PTOSettings = {
   currentBalance: 0,
   accrualRate: 0,
   accrualPeriodType: 'biweekly',
