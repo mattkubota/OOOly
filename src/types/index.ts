@@ -8,9 +8,9 @@ export interface PTOSettings {
   accrualPeriodType: AccrualPeriodType;
   lastAccrualDate: string;
   hasMaxRollover: boolean;
-  maxRollover: number | undefined;
+  maxRollover: number;  // Changed from number | undefined
   hasMaxBalance: boolean;
-  maxBalance: number | undefined;
+  maxBalance: number;   // Changed from number | undefined
 }
 
 export type DayType = 'full' | 'half' | 'holiday' | 'weekend';
