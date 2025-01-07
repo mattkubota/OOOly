@@ -1,48 +1,62 @@
+/* WHY: Global styles that affect the entire application need to be centralized
+   WHAT: Imports Tailwind's base styles and sets up custom styling overrides
+   NOTE: Order is important - custom styles should come after Tailwind imports */
+
+/* Import Tailwind's utility-first CSS framework */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Custom scrollbar styling */
+/* WHY: Default browser scrollbars can be visually jarring and inconsistent
+   WHAT: Creates a subtle, modern scrollbar design that matches the app's aesthetic
+   NOTE: These styles only work in WebKit browsers (Chrome, Safari, Edge) */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 8px; /* Thin scrollbar for vertical scrolling */
+  height: 8px; /* Matching height for horizontal scrollbar */
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #f1f1f1; /* Light gray track for subtle contrast */
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
+  background: #888; /* Medium gray thumb for good visibility */
+  border-radius: 4px; /* Rounded corners match the app's design language */
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #666;
+  background: #666; /* Darker on hover for better interaction feedback */
 }
 
-/* Base styles */
+/* WHY: The application needs a consistent base styling that works with Tailwind
+   WHAT: Sets the background color for the entire application
+   NOTE: Using @apply allows us to use Tailwind utilities in regular CSS */
 body {
-  @apply bg-gray-50;
+  @apply bg-gray-50; /* Light gray background reduces eye strain */
 }
 
-/* Input focus states */
-input:focus, select:focus {
+/* WHY: Form inputs need clear focus states for accessibility
+   WHAT: Creates a consistent focus appearance across all input types
+   NOTE: Uses Tailwind's ring utilities for a modern focus indicator */
+input:focus,
+select:focus {
   @apply outline-none ring-2 ring-blue-500;
 }
 
-/* Transition effects */
+/* WHY: Smooth transitions improve the user experience
+   WHAT: Defines fade animations for components entering/exiting the DOM
+   NOTE: These classes are used by React Transition Group for animations */
 .fade-enter {
-  opacity: 0;
+  opacity: 0; /* Start fully transparent */
 }
 .fade-enter-active {
   opacity: 1;
-  transition: opacity 200ms ease-in;
+  transition: opacity 200ms ease-in; /* Smooth fade in over 200ms */
 }
 .fade-exit {
-  opacity: 1;
+  opacity: 1; /* Start fully visible */
 }
 .fade-exit-active {
   opacity: 0;
-  transition: opacity 200ms ease-in;
+  transition: opacity 200ms ease-in; /* Smooth fade out over 200ms */
 }

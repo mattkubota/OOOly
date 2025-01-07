@@ -1,27 +1,38 @@
+// WHY: Settings management needs a comprehensive form with validation
+// WHAT: Form component for configuring PTO settings with real-time validation
+// NOTE: Handles both initial setup and settings updates
+
 import React, { useState } from "react";
 import { Settings } from "lucide-react";
 import { PTOSettings, AccrualPeriodType } from "../../types";
+import { DEFAULT_SETTINGS } from "../../hooks/usePtoSettings";
 
+// WHY: Form needs to track multiple validation errors simultaneously
+// WHAT: Defines possible validation error messages for each numeric field
 interface ValidationErrors {
   currentBalance?: string;
   maxBalance?: string;
   maxRollover?: string;
 }
 
+// WHY: Component needs to handle both creation and editing flows
 interface SettingsFormProps {
-  onSave: (settings: PTOSettings) => void;
-  initialSettings?: PTOSettings;
+  onSave: (settings: PTOSettings) => void; // Callback for saving settings
+  initialSettings?: PTOSettings; // Optional existing settings for editing
 }
 
 export const SettingsForm: React.FC<SettingsFormProps> = ({
   onSave,
   initialSettings,
 }) => {
+  // WHY: Form needs to handle both new settings and editing existing ones
+  // WHAT: Initializes form state with proper handling of Infinity values
+  // NOTE: Uses DEFAULT_SETTINGS for new settings creation
   const [formData, setFormData] = useState<PTOSettings>(() => {
     if (initialSettings) {
       return {
         ...initialSettings,
-        // Convert Infinity to undefined but preserve 0
+        // WHY: UI can't display Infinity, so convert to 0 for display
         maxRollover:
           initialSettings.maxRollover === Infinity
             ? 0
@@ -32,18 +43,12 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
             : initialSettings.maxBalance,
       };
     }
-    return {
-      currentBalance: 0,
-      accrualRate: 0,
-      accrualPeriodType: "biweekly",
-      lastAccrualDate: new Date().toISOString().split("T")[0],
-      hasMaxRollover: false,
-      maxRollover: 0,
-      hasMaxBalance: false,
-      maxBalance: 0,
-    };
+    return DEFAULT_SETTINGS;
   });
 
+  // WHY: Need separate display values to handle empty states better
+  // WHAT: Manages display-specific values for numeric inputs
+  // NOTE: Allows empty string display while maintaining 0 in actual data
   const [displayValues, setDisplayValues] = useState({
     currentBalance:
       formData.currentBalance === 0 ? "" : formData.currentBalance.toString(),
@@ -51,25 +56,29 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
       formData.accrualRate === 0 ? "" : formData.accrualRate.toString(),
   });
 
+  // WHY: Need to track validation errors for form fields
   const [errors, setErrors] = useState<ValidationErrors>({});
 
+  // WHY: Need to check form validity before saving
+  // NOTE: Form is valid when there are no validation errors
   const validateForm = () => {
-    return Object.keys(errors).length === 0;
     return Object.keys(errors).length === 0;
   };
 
+  // WHY: Need to process form data before saving
+  // WHAT: Handles conversion between UI representation and stored values
   const handleSaveClick = () => {
     if (validateForm()) {
       const processedData = {
         ...formData,
-        // Use 0 as default value when not using max values
+        // WHY: Convert empty max values to 0 for consistency
         maxRollover: formData.hasMaxRollover ? formData.maxRollover : 0,
         maxBalance: formData.hasMaxBalance ? formData.maxBalance : 0,
       };
 
       onSave({
         ...processedData,
-        // Convert to Infinity only when saving
+        // WHY: Convert 0 to Infinity for unlimited values in storage
         maxRollover:
           processedData.maxRollover === 0
             ? Infinity
@@ -80,15 +89,21 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
     }
   };
 
+  // WHY: Need a responsive, accessible form layout
+  // WHAT: Container with card-style form and consistent spacing
   return (
     <div className="max-w-4xl mx-auto p-6 text-center">
       <div className="max-w-lg mx-auto bg-white rounded-lg shadow p-6">
+        {/* WHY: Header needs visual hierarchy and branding */}
         <div className="flex items-center gap-2 mb-6">
           <Settings className="h-6 w-6 text-blue-500" />
           <h2 className="text-xl font-semibold">OOOly Settings</h2>
         </div>
 
         <div className="space-y-4">
+          {/* WHY: Current balance needs decimal precision for accurate tracking
+              WHAT: Number input with validation and empty state handling 
+              NOTE: Input removes spinner buttons for cleaner look */}
           <div>
             <label className="block mb-2">Current Balance (hours)</label>
             <input
@@ -98,6 +113,7 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
               value={displayValues.currentBalance}
               onChange={(e) => {
                 const value = e.target.value;
+                // WHY: Only allow valid decimal numbers
                 if (value === "" || /^\d*\.?\d*$/.test(value)) {
                   setDisplayValues((prev) => ({
                     ...prev,
@@ -135,6 +151,8 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
             )}
           </div>
 
+          {/* WHY: Accrual rate needs similar decimal handling to current balance
+              NOTE: This could be refactored to share logic with current balance input */}
           <div>
             <label className="block mb-2">
               Accrual Rate (hours per period)
@@ -171,6 +189,8 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
             />
           </div>
 
+          {/* WHY: Different companies have different pay period schedules
+              WHAT: Simple select for accrual period configuration */}
           <div>
             <label className="block mb-2">Accrual Period Type</label>
             <select
@@ -189,6 +209,9 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
             </select>
           </div>
 
+          {/* WHY: Need to track when PTO was last added to balance
+              WHAT: Date picker limited to past dates
+              NOTE: Uses ISO string split to handle date-only value */}
           <div>
             <label className="block mb-2">Last Accrual Date</label>
             <input
@@ -205,6 +228,9 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
             />
           </div>
 
+          {/* WHY: Companies may limit PTO rollover between years
+              WHAT: Optional numeric input that toggles max rollover functionality
+              NOTE: Empty value means no maximum (converts to Infinity) */}
           <div>
             <label className="block mb-2">Maximum Rollover Hours</label>
             <input
@@ -220,13 +246,6 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
                   maxRollover: parsedValue,
                   hasMaxRollover: value !== "",
                 }));
-
-                console.log("MaxRollover onChange:", {
-                  value,
-                  parsedValue,
-                  hasMaxRollover: value !== "",
-                  currentErrors: errors,
-                });
 
                 if (value === "") {
                   setErrors((prev) => {
@@ -263,11 +282,11 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
             {errors.maxRollover && (
               <p className="text-red-500 text-sm mt-1">{errors.maxRollover}</p>
             )}
-            {errors.maxRollover && (
-              <p className="text-red-500 text-sm mt-1">{errors.maxRollover}</p>
-            )}
           </div>
 
+          {/* WHY: Companies may limit total PTO balance
+              WHAT: Optional numeric input that toggles max balance functionality
+              NOTE: Empty value means no maximum (converts to Infinity) */}
           <div>
             <label className="block mb-2">Maximum Balance</label>
             <input
@@ -284,13 +303,6 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
                   hasMaxBalance: value !== "",
                 }));
 
-                console.log("MaxBalance onChange:", {
-                  value,
-                  parsedValue,
-                  hasMaxBalance: value !== "",
-                  currentErrors: errors,
-                });
-
                 if (value === "") {
                   setErrors((prev) => {
                     const { maxBalance, currentBalance, ...rest } = prev;
@@ -302,11 +314,11 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
                     maxBalance: "Maximum balance cannot be negative",
                   }));
                 } else {
-                  // Clear maxBalance error first
+                  // WHY: Need to validate current balance against new maximum
+                  // WHAT: Clears maxBalance error and checks current balance
                   setErrors((prev) => {
                     const { maxBalance, ...rest } = prev;
 
-                    // Check if current balance exceeds new max balance
                     if (formData.currentBalance > parsedValue) {
                       return {
                         ...rest,
@@ -330,15 +342,15 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
             {errors.maxBalance && (
               <p className="text-red-500 text-sm mt-1">{errors.maxBalance}</p>
             )}
-            {errors.maxBalance && (
-              <p className="text-red-500 text-sm mt-1">{errors.maxBalance}</p>
-            )}
           </div>
 
+          {/* WHY: Form submission needs clear action and validation state
+              WHAT: Submit button disabled when form has errors */}
           <button
             onClick={handleSaveClick}
             className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
             disabled={Object.keys(errors).length > 0}
+            // IMPROVEMENT: Remove debug onMouseOver
             onMouseOver={() =>
               console.log("Current errors preventing save:", errors)
             }
