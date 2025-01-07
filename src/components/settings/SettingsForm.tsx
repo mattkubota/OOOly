@@ -39,7 +39,6 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
       lastAccrualDate: new Date().toISOString().split("T")[0],
       hasMaxRollover: false,
       maxRollover: 0,
-      maxRollover: 0,
       hasMaxBalance: false,
       maxBalance: 0,
     };
