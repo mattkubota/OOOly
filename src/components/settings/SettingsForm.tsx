@@ -39,6 +39,7 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
       lastAccrualDate: new Date().toISOString().split("T")[0],
       hasMaxRollover: false,
       maxRollover: 0,
+      maxRollover: 0,
       hasMaxBalance: false,
       maxBalance: 0,
     };
@@ -54,6 +55,7 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
   const [errors, setErrors] = useState<ValidationErrors>({});
 
   const validateForm = () => {
+    return Object.keys(errors).length === 0;
     return Object.keys(errors).length === 0;
   };
 
@@ -262,6 +264,9 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
             {errors.maxRollover && (
               <p className="text-red-500 text-sm mt-1">{errors.maxRollover}</p>
             )}
+            {errors.maxRollover && (
+              <p className="text-red-500 text-sm mt-1">{errors.maxRollover}</p>
+            )}
           </div>
 
           <div>
@@ -323,6 +328,9 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
               }`}
               placeholder="No maximum"
             />
+            {errors.maxBalance && (
+              <p className="text-red-500 text-sm mt-1">{errors.maxBalance}</p>
+            )}
             {errors.maxBalance && (
               <p className="text-red-500 text-sm mt-1">{errors.maxBalance}</p>
             )}
