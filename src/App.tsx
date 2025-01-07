@@ -9,7 +9,7 @@ import { SettingsForm } from "./components/settings/SettingsForm";
 import { EventForm } from "./components/events/EventForm";
 
 import { usePTOEvents } from "./hooks/usePtoEvents";
-import { DEFAULT_SETTINGS } from './hooks/usePtoSettings';
+import { DEFAULT_SETTINGS } from "./hooks/usePtoSettings";
 
 // Type imports
 import { PTOSettings, PTOEvent } from "./types";
@@ -18,9 +18,13 @@ const App: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [showEventForm, setShowEventForm] = useState(false);
   const [settings, setSettings] = useState<PTOSettings | null>(null);
-  const [editingEvent, setEditingEvent] = useState<PTOEvent | undefined>(undefined);
+  const [editingEvent, setEditingEvent] = useState<PTOEvent | undefined>(
+    undefined
+  );
 
-  const { events, addEvent, updateEvent, deleteEvent } = usePTOEvents(settings || DEFAULT_SETTINGS);
+  const { events, addEvent, updateEvent, deleteEvent } = usePTOEvents(
+    settings || DEFAULT_SETTINGS
+  );
 
   useEffect(() => {
     // Load settings from localStorage
@@ -58,15 +62,13 @@ const App: React.FC = () => {
   if (!settings) {
     return (
       <div className="max-w-4xl mx-auto p-6">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold mb-4">
-            Welcome to OOOly
-          </h2>
-          <p className="mb-4">
-            Please set up your OOO benefit details to get started.
-          </p>
-          <SettingsForm onSave={handleSaveSettings} />
-        </div>
+        <h2 className="text-xl font-semibold mb-4 text-center">
+          Welcome to OOOly
+        </h2>
+        <p className="mb-4 text-center">
+          Please set up your OOO benefit details to get started.
+        </p>
+        <SettingsForm onSave={handleSaveSettings} />
       </div>
     );
   }

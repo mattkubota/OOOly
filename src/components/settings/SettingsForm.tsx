@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Settings } from 'lucide-react';
-import { PTOSettings, AccrualPeriodType } from '../../types';
+import React, { useState } from "react";
+import { Settings } from "lucide-react";
+import { PTOSettings, AccrualPeriodType } from "../../types";
 
 interface ValidationErrors {
   currentBalance?: string;
@@ -13,34 +13,42 @@ interface SettingsFormProps {
   initialSettings?: PTOSettings;
 }
 
-export const SettingsForm: React.FC<SettingsFormProps> = ({ 
-  onSave, 
-  initialSettings 
+export const SettingsForm: React.FC<SettingsFormProps> = ({
+  onSave,
+  initialSettings,
 }) => {
   const [formData, setFormData] = useState<PTOSettings>(() => {
     if (initialSettings) {
       return {
         ...initialSettings,
         // Convert Infinity to undefined but preserve 0
-        maxRollover: initialSettings.maxRollover === Infinity ? 0 : initialSettings.maxRollover,
-        maxBalance: initialSettings.maxBalance === Infinity ? 0 : initialSettings.maxBalance
+        maxRollover:
+          initialSettings.maxRollover === Infinity
+            ? 0
+            : initialSettings.maxRollover,
+        maxBalance:
+          initialSettings.maxBalance === Infinity
+            ? 0
+            : initialSettings.maxBalance,
       };
     }
     return {
       currentBalance: 0,
       accrualRate: 0,
-      accrualPeriodType: 'biweekly',
-      lastAccrualDate: new Date().toISOString().split('T')[0],
+      accrualPeriodType: "biweekly",
+      lastAccrualDate: new Date().toISOString().split("T")[0],
       hasMaxRollover: false,
       maxRollover: 0,
       hasMaxBalance: false,
-      maxBalance: 0
+      maxBalance: 0,
     };
   });
 
   const [displayValues, setDisplayValues] = useState({
-    currentBalance: formData.currentBalance === 0 ? '' : formData.currentBalance.toString(),
-    accrualRate: formData.accrualRate === 0 ? '' : formData.accrualRate.toString()
+    currentBalance:
+      formData.currentBalance === 0 ? "" : formData.currentBalance.toString(),
+    accrualRate:
+      formData.accrualRate === 0 ? "" : formData.accrualRate.toString(),
   });
 
   const [errors, setErrors] = useState<ValidationErrors>({});
@@ -55,21 +63,25 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
         ...formData,
         // Use 0 as default value when not using max values
         maxRollover: formData.hasMaxRollover ? formData.maxRollover : 0,
-        maxBalance: formData.hasMaxBalance ? formData.maxBalance : 0
+        maxBalance: formData.hasMaxBalance ? formData.maxBalance : 0,
       };
 
       onSave({
         ...processedData,
         // Convert to Infinity only when saving
-        maxRollover: processedData.maxRollover === 0 ? Infinity : processedData.maxRollover,
-        maxBalance: processedData.maxBalance === 0 ? Infinity : processedData.maxBalance
+        maxRollover:
+          processedData.maxRollover === 0
+            ? Infinity
+            : processedData.maxRollover,
+        maxBalance:
+          processedData.maxBalance === 0 ? Infinity : processedData.maxBalance,
       });
     }
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-4">
-      <div className="bg-white rounded-lg shadow p-6">
+    <div className="max-w-4xl mx-auto p-6 text-center">
+      <div className="max-w-lg mx-auto bg-white rounded-lg shadow p-6">
         <div className="flex items-center gap-2 mb-6">
           <Settings className="h-6 w-6 text-blue-500" />
           <h2 className="text-xl font-semibold">OOOly Settings</h2>
@@ -168,7 +180,7 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
                   accrualPeriodType: e.target.value as AccrualPeriodType,
                 }))
               }
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded bg-white appearance-none"
             >
               <option value="weekly">Weekly</option>
               <option value="biweekly">Biweekly</option>
@@ -188,7 +200,7 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
                   lastAccrualDate: e.target.value,
                 }))
               }
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded bg-white appearance-none"
             />
           </div>
 
@@ -196,6 +208,7 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
             <label className="block mb-2">Maximum Rollover Hours</label>
             <input
               type="number"
+              inputMode="numeric"
               min="0"
               value={formData.hasMaxRollover ? formData.maxRollover : ""}
               onChange={(e) => {
@@ -206,31 +219,35 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
                   maxRollover: parsedValue,
                   hasMaxRollover: value !== "",
                 }));
-              
-                console.log('MaxRollover onChange:', {
+
+                console.log("MaxRollover onChange:", {
                   value,
                   parsedValue,
                   hasMaxRollover: value !== "",
-                  currentErrors: errors
+                  currentErrors: errors,
                 });
-              
+
                 if (value === "") {
-                  setErrors(prev => {
+                  setErrors((prev) => {
                     const { maxRollover, ...rest } = prev;
                     return rest;
                   });
                 } else if (parsedValue < 0) {
-                  setErrors(prev => ({
+                  setErrors((prev) => ({
                     ...prev,
-                    maxRollover: "Maximum rollover cannot be negative"
+                    maxRollover: "Maximum rollover cannot be negative",
                   }));
-                } else if (formData.hasMaxBalance && parsedValue > formData.maxBalance) {
-                  setErrors(prev => ({
+                } else if (
+                  formData.hasMaxBalance &&
+                  parsedValue > formData.maxBalance
+                ) {
+                  setErrors((prev) => ({
                     ...prev,
-                    maxRollover: "Maximum rollover cannot exceed maximum balance"
+                    maxRollover:
+                      "Maximum rollover cannot exceed maximum balance",
                   }));
                 } else {
-                  setErrors(prev => {
+                  setErrors((prev) => {
                     const { maxRollover, ...rest } = prev;
                     return rest;
                   });
@@ -251,6 +268,7 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
             <label className="block mb-2">Maximum Balance</label>
             <input
               type="number"
+              inputMode="numeric"
               min="0"
               value={formData.hasMaxBalance ? formData.maxBalance : ""}
               onChange={(e) => {
@@ -261,37 +279,38 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
                   maxBalance: parsedValue,
                   hasMaxBalance: value !== "",
                 }));
-              
-                console.log('MaxBalance onChange:', {
+
+                console.log("MaxBalance onChange:", {
                   value,
                   parsedValue,
                   hasMaxBalance: value !== "",
-                  currentErrors: errors
+                  currentErrors: errors,
                 });
-              
+
                 if (value === "") {
-                  setErrors(prev => {
+                  setErrors((prev) => {
                     const { maxBalance, currentBalance, ...rest } = prev;
                     return rest;
                   });
                 } else if (parsedValue < 0) {
-                  setErrors(prev => ({
+                  setErrors((prev) => ({
                     ...prev,
-                    maxBalance: "Maximum balance cannot be negative"
+                    maxBalance: "Maximum balance cannot be negative",
                   }));
                 } else {
                   // Clear maxBalance error first
-                  setErrors(prev => {
+                  setErrors((prev) => {
                     const { maxBalance, ...rest } = prev;
-                    
+
                     // Check if current balance exceeds new max balance
                     if (formData.currentBalance > parsedValue) {
                       return {
                         ...rest,
-                        currentBalance: "Current balance cannot exceed maximum balance"
+                        currentBalance:
+                          "Current balance cannot exceed maximum balance",
                       };
                     }
-                    
+
                     // If all good, remove currentBalance error too
                     const { currentBalance, ...finalRest } = rest;
                     return finalRest;
@@ -310,13 +329,15 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
           </div>
 
           <button
-  onClick={handleSaveClick}
-  className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
-  disabled={Object.keys(errors).length > 0}
-  onMouseOver={() => console.log('Current errors preventing save:', errors)}
->
-  Save Settings
-</button>
+            onClick={handleSaveClick}
+            className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+            disabled={Object.keys(errors).length > 0}
+            onMouseOver={() =>
+              console.log("Current errors preventing save:", errors)
+            }
+          >
+            Save Settings
+          </button>
         </div>
       </div>
     </div>
