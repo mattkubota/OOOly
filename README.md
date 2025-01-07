@@ -51,14 +51,12 @@ We're continuously working to make OOOly even better. Here's what's coming:
 ### Near-Term Improvements
 - Advanced event management features (editing and deleting planned time off)
 - Comprehensive balance projections with visual charts
-- Event overlap detection to prevent scheduling conflicts
 - Holiday calendar integration
 
 ### Future Enhancements
 - Data export/import functionality for backup and transfer
 - Multi-device synchronization capabilities
 - Integration with popular calendar applications
-- Team calendar view for better planning
 - Customizable notifications and reminders
 - Advanced reporting and analytics
 
