@@ -3,11 +3,7 @@
 // NOTE: This module operates independently of the UI to ensure consistent validation across the application
 
 import { PTOEvent, PTOSettings } from "../types";
-import {
-  calculatePayPeriodsBetweenDates,
-  getTodayString,
-  createDateFromYMD,
-} from "./dateCalculations";
+import { calculatePayPeriodsBetweenDates, getTodayString } from "./dateCalculations";
 
 // WHY: Companies need to validate PTO requests against both current and projected balances
 // WHAT: Determines if an employee has sufficient PTO hours for a requested time off period
