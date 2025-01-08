@@ -65,6 +65,14 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
     return Object.keys(errors).length === 0;
   };
 
+  // WHY: Native form submissions need to be handled properly in React
+  // WHAT: Captures form submission event and triggers save logic
+  // NOTE: Prevents page refresh while maintaining form accessibility
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault(); // Prevent default form submission
+    handleSaveClick(); // Your existing save logic
+  };
+
   // WHY: Need to process form data before saving
   // WHAT: Handles conversion between UI representation and stored values
   const handleSaveClick = () => {
@@ -94,13 +102,12 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
   return (
     <div className="max-w-4xl mx-auto p-6 text-center">
       <div className="max-w-lg mx-auto bg-white rounded-lg shadow p-6">
-        {/* WHY: Header needs visual hierarchy and branding */}
         <div className="flex items-center gap-2 mb-6">
           <Settings className="h-6 w-6 text-blue-500" />
           <h2 className="text-xl font-semibold">OOOly Settings</h2>
         </div>
 
-        <div className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* WHY: Current balance needs decimal precision for accurate tracking
               WHAT: Number input with validation and empty state handling 
               NOTE: Input removes spinner buttons for cleaner look */}
@@ -347,17 +354,13 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
           {/* WHY: Form submission needs clear action and validation state
               WHAT: Submit button disabled when form has errors */}
           <button
-            onClick={handleSaveClick}
+            type="submit"
             className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
             disabled={Object.keys(errors).length > 0}
-            // IMPROVEMENT: Remove debug onMouseOver
-            onMouseOver={() =>
-              console.log("Current errors preventing save:", errors)
-            }
           >
             Save Settings
           </button>
-        </div>
+        </form>
       </div>
     </div>
   );
