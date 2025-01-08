@@ -8,9 +8,12 @@ import { PTOSettings, AccrualPeriodType } from "../../types";
 import { DEFAULT_SETTINGS } from "../../hooks/usePtoSettings";
 
 // WHY: Form needs to track multiple validation errors simultaneously
-// WHAT: Defines possible validation error messages for each numeric field
+// WHAT: Defines possible validation error messages for each field
 interface ValidationErrors {
   currentBalance?: string;
+  accrualRate?: string;
+  accrualPeriodType?: string;
+  lastAccrualDate?: string;
   maxBalance?: string;
   maxRollover?: string;
 }
@@ -62,7 +65,28 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
   // WHY: Need to check form validity before saving
   // NOTE: Form is valid when there are no validation errors
   const validateForm = () => {
-    return Object.keys(errors).length === 0;
+    const newErrors: ValidationErrors = {};
+
+    // Validate required fields
+    if (!displayValues.currentBalance) {
+      newErrors.currentBalance = "Current balance is required";
+    }
+    if (!displayValues.accrualRate) {
+      newErrors.accrualRate = "Accrual rate is required";
+    }
+    if (!formData.accrualPeriodType) {
+      newErrors.accrualPeriodType = "Accrual period type is required";
+    }
+    if (!formData.lastAccrualDate) {
+      newErrors.lastAccrualDate = "Last accrual date is required";
+    }
+
+    // Add any existing validation errors
+    setErrors({ ...newErrors, ...errors });
+
+    return (
+      Object.keys(newErrors).length === 0 && Object.keys(errors).length === 0
+    );
   };
 
   // WHY: Native form submissions need to be handled properly in React
@@ -112,7 +136,9 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
               WHAT: Number input with validation and empty state handling 
               NOTE: Input removes spinner buttons for cleaner look */}
           <div>
-            <label className="block mb-2">Current Balance (hours)</label>
+            <label className="block mb-2">
+              Current Balance (hours) <span className="text-red-500">*</span>
+            </label>
             <input
               type="number"
               inputMode="decimal"
@@ -162,7 +188,8 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
               NOTE: This could be refactored to share logic with current balance input */}
           <div>
             <label className="block mb-2">
-              Accrual Rate (hours per period)
+              Accrual Rate (hours per period){" "}
+              <span className="text-red-500">*</span>
             </label>
             <input
               type="number"
@@ -192,14 +219,21 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
                 }
               }}
               onFocus={(e) => e.target.select()}
-              className="w-full p-2 border rounded [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              className={`w-full p-2 border rounded [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                errors.accrualRate ? "border-red-500" : ""
+              }`}
             />
+            {errors.accrualRate && (
+              <p className="text-red-500 text-sm mt-1">{errors.accrualRate}</p>
+            )}
           </div>
 
           {/* WHY: Different companies have different pay period schedules
               WHAT: Simple select for accrual period configuration */}
           <div>
-            <label className="block mb-2">Accrual Period Type</label>
+            <label className="block mb-2">
+              Accrual Period Type <span className="text-red-500">*</span>
+            </label>
             <select
               value={formData.accrualPeriodType}
               onChange={(e) =>
@@ -208,19 +242,28 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
                   accrualPeriodType: e.target.value as AccrualPeriodType,
                 }))
               }
-              className="w-full p-2 border rounded bg-white appearance-none"
+              className={`w-full p-2 border rounded bg-white appearance-none ${
+                errors.accrualPeriodType ? "border-red-500" : ""
+              }`}
             >
               <option value="weekly">Weekly</option>
               <option value="biweekly">Biweekly</option>
               <option value="semi-monthly">Semi-monthly</option>
             </select>
+            {errors.accrualPeriodType && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.accrualPeriodType}
+              </p>
+            )}
           </div>
 
           {/* WHY: Need to track when PTO was last added to balance
               WHAT: Date picker limited to past dates
               NOTE: Uses ISO string split to handle date-only value */}
           <div>
-            <label className="block mb-2">Last Accrual Date</label>
+            <label className="block mb-2">
+              Last Accrual Date <span className="text-red-500">*</span>
+            </label>
             <input
               type="date"
               value={formData.lastAccrualDate}
@@ -231,8 +274,15 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
                   lastAccrualDate: e.target.value,
                 }))
               }
-              className="w-full p-2 border rounded bg-white appearance-none"
+              className={`w-full p-2 border rounded bg-white appearance-none ${
+                errors.lastAccrualDate ? "border-red-500" : ""
+              }`}
             />
+            {errors.lastAccrualDate && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.lastAccrualDate}
+              </p>
+            )}
           </div>
 
           {/* WHY: Companies may limit PTO rollover between years
@@ -350,6 +400,10 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
               <p className="text-red-500 text-sm mt-1">{errors.maxBalance}</p>
             )}
           </div>
+
+          <p className="text-sm text-gray-500 mb-4">
+            <span className="text-red-500">*</span> Required fields
+          </p>
 
           {/* WHY: Form submission needs clear action and validation state
               WHAT: Submit button disabled when form has errors */}
