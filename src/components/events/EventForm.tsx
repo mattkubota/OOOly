@@ -43,7 +43,6 @@ export const EventForm: React.FC<EventFormProps> = ({
     full: "Full Day",
     half: "Half Day",
     holiday: "Holiday",
-    weekend: "Weekend",
   };
 
   // WHY: Need validation before proceeding to next step
@@ -105,9 +104,11 @@ export const EventForm: React.FC<EventFormProps> = ({
       while (current <= end) {
         const currentDateString = toDateString(current);
         const dayIsWeekend = isWeekend(currentDateString);
+        // WHY: Weekend days still need a valid type even though they're not editable
+        // WHAT: Sets all days to "full" by default, weekends are handled by isWeekend flag
         newDays.push({
           date: currentDateString,
-          type: dayIsWeekend ? "weekend" : "full",
+          type: "full",
           isWeekend: dayIsWeekend,
         });
         current.setDate(current.getDate() + 1);
@@ -289,7 +290,14 @@ export const EventForm: React.FC<EventFormProps> = ({
                 : "bg-white border"
             }`}
           >
-            <span>{formatDate(day.date)}</span>
+            <span className="flex items-center gap-2">
+              <span>{formatDate(day.date)}</span>
+              {day.isWeekend && (
+                <span className="text-sm px-2 py-1 bg-gray-200 rounded text-gray-600">
+                  Weekend
+                </span>
+              )}
+            </span>
             {!day.isWeekend && (
               <select
                 value={day.type}

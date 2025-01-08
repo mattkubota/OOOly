@@ -380,10 +380,6 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
                     }
                   }
 
-                  console.log(
-                    "New errors after max balance change:",
-                    newErrors
-                  ); // Add this to debug
                   return newErrors;
                 });
               }}

@@ -3,7 +3,11 @@
 // NOTE: This module operates independently of the UI to ensure consistent validation across the application
 
 import { PTOEvent, PTOSettings } from "../types";
-import { calculatePayPeriodsBetweenDates } from "./dateCalculations";
+import {
+  calculatePayPeriodsBetweenDates,
+  getTodayString,
+  createDateFromYMD,
+} from "./dateCalculations";
 
 // WHY: Companies need to validate PTO requests against both current and projected balances
 // WHAT: Determines if an employee has sufficient PTO hours for a requested time off period
@@ -21,23 +25,17 @@ export function validateEventBalance(
   // NOTE: This represents immediately available hours
   let availableHours = settings.currentBalance;
 
-  // WHY: Extract year from date string to avoid timezone complications
-  // NOTE: Using array destructuring with split() provides clean year extraction
-  const [eventYear] = event.startDate.split("-").map(Number);
-  const currentYear = new Date().getFullYear();
-
-  // WHY: Need precise dates for accrual calculations
-  // NOTE: We create new Date objects here because we need to compare timestamps
-  const today = new Date();
-  const eventStart = new Date(event.startDate);
+  // WHY: Need to handle date comparisons consistently
+  // NOTE: Using YYYY-MM-DD strings for comparison
+  const today = getTodayString();
 
   // WHY: Only include future accruals for future events
   // NOTE: This prevents counting accruals that haven't actually occurred yet
-  if (eventStart > today) {
+  if (event.startDate > today) {
     // WHY: Calculate how many pay periods occur before the event starts
     // NOTE: This determines how many accruals will occur before PTO begins
     const payPeriods = calculatePayPeriodsBetweenDates(
-      today.toISOString(),
+      today,
       event.startDate,
       settings.accrualPeriodType
     );
@@ -51,7 +49,7 @@ export function validateEventBalance(
   // WHY: Must account for all previously scheduled PTO that occurs before this event
   // NOTE: The created check prevents double-counting when editing an existing event
   const priorEvents = otherEvents.filter(
-    (e) => new Date(e.startDate) < eventStart && e.created !== event.created
+    (e) => e.startDate < event.startDate && e.created !== event.created
   );
 
   // WHY: Subtract hours from all prior events to get true available balance
@@ -61,7 +59,7 @@ export function validateEventBalance(
 
   // WHY: Some companies set maximum PTO balance limits
   // NOTE: This prevents accrual beyond company-set maximums
-  if (settings.maxBalance !== undefined) {
+  if (settings.hasMaxBalance) {
     availableHours = Math.min(availableHours, settings.maxBalance);
   }
 
