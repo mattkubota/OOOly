@@ -1,81 +1,124 @@
-// WHY: PTO events need a clear, scannable display that shows key information and status
-// WHAT: A card component that shows event details, actions, and balance validation
-// NOTE: Uses a combination of icons and color-coding for quick visual understanding
-
-import React from "react";
-import { Clock, CheckCircle, XCircle } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { Clock, CheckCircle, XCircle, Pencil } from "lucide-react";
 import { PTOEvent } from "../../types";
 import { formatDate } from "../../utils/dateCalculations";
 
 interface EventCardProps {
-  event: PTOEvent; // The PTO event to display
-  onEdit?: (event: PTOEvent) => void; // Optional edit callback
-  onDelete?: (event: PTOEvent) => void; // Optional delete callback
+  event: PTOEvent;
+  onDelete?: (event: PTOEvent) => void;
+  onEditName: (event: PTOEvent, newName: string) => void;
+  onEditDates: (event: PTOEvent) => void;
   balanceValidation: {
-    // Validation results for event hours
-    availableHours: number; // Hours available when event starts
-    hasEnough: boolean; // Whether there are sufficient hours
-    difference: number; // Surplus or deficit of hours
+    availableHours: number;
+    hasEnough: boolean;
+    difference: number;
   };
 }
 
 export const EventCard: React.FC<EventCardProps> = ({
   event,
-  onEdit,
   onDelete,
+  onEditName,
+  onEditDates,
   balanceValidation,
 }) => {
-  // WHY: Need to show total working days excluding weekends and holidays
-  // WHAT: Calculates effective work days accounting for half days
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [newName, setNewName] = useState(event.name);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Handle name edit submission
+  const handleNameSubmit = () => {
+    if (newName.trim() !== "") {
+      onEditName(event, newName.trim());
+      setIsEditingName(false);
+    }
+  };
+
+  // Handle keyboard events for name editing
+  const handleNameKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleNameSubmit();
+    } else if (e.key === "Escape") {
+      setNewName(event.name);
+      setIsEditingName(false);
+    }
+  };
+
+  // Focus input when editing starts
+  useEffect(() => {
+    if (isEditingName && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isEditingName]);
+
   const workDayCount = event.days
     .filter((d) => !d.isWeekend && d.type !== "holiday")
     .reduce((total, day) => total + (day.type === "half" ? 0.5 : 1), 0);
 
-  // WHY: Numbers need grammatically correct labels
-  // WHAT: Handles singular/plural forms of words
   const pluralize = (num: number, word: string) =>
     `${num} ${word}${num === 1 ? "" : "s"}`;
 
   return (
     <div className="p-4 hover:bg-gray-50">
-      {/* WHY: Event header needs to show key info and actions
-          WHAT: Displays event name, dates, and action buttons */}
       <div className="flex justify-between items-start mb-2">
-        <div>
-          <h3 className="font-semibold">{event.name}</h3>
-          <p className="text-gray-600">
-            {formatDate(event.startDate)}
-            {event.endDate !== event.startDate &&
-              ` - ${formatDate(event.endDate)}`}
-          </p>
-        </div>
-
-        {/* WHY: Actions need to be easily accessible but not prominent
-            WHAT: Right-aligned action buttons with appropriate colors */}
-        <div className="flex items-center gap-4">
-          <div className="flex gap-2">
-            {onEdit && (
-              <button
-                onClick={() => onEdit(event)}
-                className="text-sm text-blue-600 hover:text-blue-800"
+        <div className="flex-1">
+          {/* Editable event name */}
+          <div className="group relative">
+            {isEditingName ? (
+              <input
+                ref={inputRef}
+                type="text"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                onBlur={handleNameSubmit}
+                onKeyDown={handleNameKeyDown}
+                className="w-full font-semibold bg-white border-b border-blue-500 focus:outline-none"
+              />
+            ) : (
+              <div
+                onClick={() => setIsEditingName(true)}
+                className="flex items-center cursor-pointer"
               >
-                Edit
-              </button>
-            )}
-            {onDelete && (
-              <button
-                onClick={() => onDelete(event)}
-                className="text-sm text-red-600 hover:text-red-800"
-              >
-                Delete
-              </button>
+                <h3 className="font-semibold">{event.name}</h3>
+                <Pencil
+                  size={14}
+                  className="ml-2 opacity-0 group-hover:opacity-100 text-gray-400"
+                />
+              </div>
             )}
           </div>
+
+          {/* Editable date range */}
+          <div
+            onClick={() => onEditDates(event)}
+            className="group relative cursor-pointer mt-1"
+          >
+            <p className="text-gray-600">
+              {formatDate(event.startDate)}
+              {event.endDate !== event.startDate &&
+                ` - ${formatDate(event.endDate)}`}
+            </p>
+            <Pencil
+              size={14}
+              className="absolute -right-5 top-1 opacity-0 group-hover:opacity-100 text-gray-400"
+            />
+          </div>
+        </div>
+
+        {/* Delete button */}
+        <div className="flex items-center">
+          {onDelete && (
+            <button
+              onClick={() => onDelete(event)}
+              className="text-sm text-red-600 hover:text-red-800"
+            >
+              Delete
+            </button>
+          )}
         </div>
       </div>
 
-      {/* WHY: Event details and status need clear visual hierarchy
-          WHAT: Shows duration and validation status with icons */}
       <div className="flex items-center justify-between mt-2">
         <div className="flex items-center gap-2 text-sm text-gray-500">
           <Clock size={16} />
@@ -85,8 +128,6 @@ export const EventCard: React.FC<EventCardProps> = ({
           </span>
         </div>
 
-        {/* WHY: Balance status needs clear visual feedback
-            WHAT: Shows success/error state with appropriate icons and colors */}
         <div className="flex items-center gap-3">
           {balanceValidation.hasEnough ? (
             <>
