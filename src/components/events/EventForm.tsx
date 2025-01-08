@@ -5,7 +5,7 @@
 import React, { useState } from "react";
 import { Calendar } from "lucide-react";
 import { PTOEvent, PTODay, DayType } from "../../types";
-import { isWeekend } from "../../utils/dateCalculations";
+import { isWeekend, formatDate } from "../../utils/dateCalculations";
 
 // WHY: Component needs type-safe props to handle both creation and editing
 interface EventFormProps {
@@ -130,10 +130,6 @@ export const EventForm: React.FC<EventFormProps> = ({
   const calculateTotalHours = () => {
     return days.reduce((total, day) => {
       if (day.isWeekend || day.type === "holiday") return total;
-      const adjustedDate = new Date(day.date);
-      adjustedDate.setMinutes(
-        adjustedDate.getMinutes() + adjustedDate.getTimezoneOffset()
-      );
       return total + (day.type === "full" ? 8 : 4);
     }, 0);
   };
@@ -301,7 +297,7 @@ export const EventForm: React.FC<EventFormProps> = ({
             }`}
           >
             <span className="flex items-center gap-2">
-              <span>{day.date.toLocaleDateString()}</span>
+              <span>{formatDate(day.date.toISOString())}</span>
               {day.isWeekend && (
                 <span className="text-sm px-2 py-1 bg-gray-200 rounded text-gray-600">
                   Weekend

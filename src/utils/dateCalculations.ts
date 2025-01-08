@@ -91,3 +91,12 @@ export const getBusinessDaysBetweenDates = (
 
   return dates;
 };
+
+// WHY: Date formatting needs to handle timezone differences consistently
+// WHAT: Formats date string to localized date with timezone adjustment
+// NOTE: Adjusts for timezone to prevent off-by-one day errors
+export const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
+  return date.toLocaleDateString();
+};

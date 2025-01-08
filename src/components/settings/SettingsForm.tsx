@@ -164,14 +164,6 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
                   }
                 }
               }}
-              onBlur={(e) => {
-                if (e.target.value === "") {
-                  setFormData((prev) => ({
-                    ...prev,
-                    currentBalance: 0,
-                  }));
-                }
-              }}
               onFocus={(e) => e.target.select()}
               className={`w-full p-2 border rounded [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
                 errors.currentBalance ? "border-red-500" : ""
@@ -199,6 +191,7 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
               value={displayValues.accrualRate}
               onChange={(e) => {
                 const value = e.target.value;
+                // WHY: Only allow valid decimal numbers
                 if (value === "" || /^\d*\.?\d*$/.test(value)) {
                   setDisplayValues((prev) => ({
                     ...prev,
@@ -208,14 +201,12 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
                     ...prev,
                     accrualRate: value === "" ? 0 : parseFloat(value || "0"),
                   }));
-                }
-              }}
-              onBlur={(e) => {
-                if (e.target.value === "") {
-                  setFormData((prev) => ({
-                    ...prev,
-                    accrualRate: 0,
-                  }));
+                  if (errors.accrualRate) {
+                    setErrors((prev) => ({
+                      ...prev,
+                      accrualRate: undefined,
+                    }));
+                  }
                 }
               }}
               onFocus={(e) => e.target.select()}

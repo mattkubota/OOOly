@@ -5,6 +5,7 @@
 import React from "react";
 import { Clock, CheckCircle, XCircle } from "lucide-react";
 import { PTOEvent } from "../../types";
+import { formatDate } from "../../utils/dateCalculations";
 
 interface EventCardProps {
   event: PTOEvent; // The PTO event to display
@@ -24,15 +25,6 @@ export const EventCard: React.FC<EventCardProps> = ({
   onDelete,
   balanceValidation,
 }) => {
-  // WHY: Need consistent date formatting that handles timezone differences
-  // WHAT: Formats dates while accounting for timezone offsets
-  // NOTE: Adjusts for timezone to prevent off-by-one day errors
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
-    return date.toLocaleDateString();
-  };
-
   // WHY: Need to show total working days excluding weekends and holidays
   // WHAT: Calculates effective work days accounting for half days
   const workDayCount = event.days

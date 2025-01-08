@@ -1,13 +1,11 @@
-// WHY: Centralizes all PTO-specific calculations to ensure consistent business logic
-// WHAT: Handles calculations for PTO availability, usage, and projections
-// NOTE: All calculations account for maximum balances and rollover limits
+// WHY: Core PTO calculations need to be centralized and reusable
+// WHAT: Provides utility functions for PTO calculations and validations
 
 import { PTOEvent, PTOSettings } from "../types";
 import { calculatePayPeriodsBetweenDates } from "./dateCalculations";
 
-// WHY: Need to verify sufficient PTO balance before allowing event creation
-// WHAT: Calculates available hours at event start considering accruals and prior usage
-// NOTE: Accounts for maximum balance limits if configured
+// WHY: Need to validate if users have sufficient hours for PTO requests
+// WHAT: Calculates available hours and determines if request can be fulfilled
 export const calculateAvailableHours = (
   event: PTOEvent,
   settings: PTOSettings,
@@ -21,8 +19,6 @@ export const calculateAvailableHours = (
   const eventStart = new Date(event.startDate);
   const today = new Date();
 
-  // WHY: Include future accruals up to event start date
-  // NOTE: This allows planning future PTO that depends on accruals
   const payPeriodsUntilEvent = calculatePayPeriodsBetweenDates(
     today.toISOString(),
     event.startDate,
@@ -31,15 +27,12 @@ export const calculateAvailableHours = (
 
   availableHours += payPeriodsUntilEvent * settings.accrualRate;
 
-  // WHY: Must account for all PTO events that occur before this one
-  // NOTE: Uses filter to ensure chronological order of events
   const priorHoursUsed = priorEvents
     .filter((e) => new Date(e.startDate) < eventStart)
     .reduce((total, e) => total + e.totalHours, 0);
 
   availableHours -= priorHoursUsed;
 
-  // WHY: Some companies cap maximum PTO balance
   if (settings.hasMaxBalance) {
     availableHours = Math.min(availableHours, settings.maxBalance);
   }
@@ -54,19 +47,9 @@ export const calculateAvailableHours = (
   };
 };
 
-// WHY: Different day types (full/half/holiday) affect total PTO hours differently
-// WHAT: Calculates total PTO hours for an event accounting for day types
-// NOTE: Weekends and holidays don't consume PTO hours
-export const calculateTotalHours = (event: PTOEvent): number => {
-  return event.days.reduce((total, day) => {
-    if (day.isWeekend || day.type === "holiday") return total;
-    return total + (day.type === "full" ? 8 : 4);
-  }, 0);
-};
-
-// WHY: Need to warn users about potential loss of PTO due to rollover limits
-// WHAT: Projects year-end balance and identifies hours at risk of being lost
-// NOTE: Accounts for both maximum balance and rollover limits
+// WHY: Companies need to project year-end balances to prevent lost PTO
+// WHAT: Calculates projected balance and identifies hours at risk of being lost
+// NOTE: Currently not used in UI - could be valuable for year-end planning alerts
 export const calculateYearEndProjection = (
   settings: PTOSettings,
   plannedEvents: PTOEvent[]
@@ -78,7 +61,6 @@ export const calculateYearEndProjection = (
   const today = new Date();
   const yearEnd = new Date(today.getFullYear(), 11, 31);
 
-  // WHY: Calculate remaining accruals for the year
   const remainingPayPeriods = calculatePayPeriodsBetweenDates(
     today.toISOString(),
     yearEnd.toISOString(),
@@ -94,12 +76,10 @@ export const calculateYearEndProjection = (
   let projectedBalance =
     settings.currentBalance + projectedAccrual - plannedHours;
 
-  // WHY: Apply maximum balance limit if configured
   if (settings.hasMaxBalance) {
     projectedBalance = Math.min(projectedBalance, settings.maxBalance);
   }
 
-  // WHY: Calculate hours that would be lost due to rollover limit
   const willExceedRollover =
     settings.hasMaxRollover && projectedBalance > settings.maxRollover;
   const hoursAtRisk = willExceedRollover
@@ -111,4 +91,12 @@ export const calculateYearEndProjection = (
     willExceedRollover,
     hoursAtRisk,
   };
+};
+
+// WHY: Users need warning when approaching rollover limit
+// WHAT: Determines if current balance is near rollover limit
+// NOTE: Currently not used in UI - could be used for warning banner
+export const shouldWarnAboutRollover = (settings: PTOSettings): boolean => {
+  if (!settings.hasMaxRollover) return false;
+  return settings.currentBalance > settings.maxRollover * 0.8;
 };
