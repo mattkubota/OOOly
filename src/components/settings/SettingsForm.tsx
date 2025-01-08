@@ -81,12 +81,10 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
       newErrors.lastAccrualDate = "Last accrual date is required";
     }
 
-    // Add any existing validation errors
-    setErrors({ ...newErrors, ...errors });
+    // Add new validation errors
+    setErrors(newErrors);
 
-    return (
-      Object.keys(newErrors).length === 0 && Object.keys(errors).length === 0
-    );
+    return Object.keys(newErrors).length === 0;
   };
 
   // WHY: Native form submissions need to be handled properly in React
@@ -401,7 +399,6 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
           <button
             type="submit"
             className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
-            disabled={Object.keys(errors).length > 0}
           >
             Save Settings
           </button>
