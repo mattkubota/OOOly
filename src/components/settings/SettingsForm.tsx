@@ -81,9 +81,19 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
       newErrors.lastAccrualDate = "Last accrual date is required";
     }
 
-    // Add new validation errors
+    // Re-validate max balance
+    if (
+      formData.hasMaxBalance &&
+      formData.currentBalance > formData.maxBalance
+    ) {
+      newErrors.currentBalance =
+        "Current balance cannot exceed maximum balance";
+    }
+
+    // Update the error state
     setErrors(newErrors);
 
+    // Form is only valid if there are no errors
     return Object.keys(newErrors).length === 0;
   };
 
@@ -134,7 +144,7 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
               WHAT: Number input with validation and empty state handling 
               NOTE: Input removes spinner buttons for cleaner look */}
           <div>
-            <label className="block mb-2">
+            <label className="block mb-2 text-left">
               Current Balance (hours) <span className="text-red-500">*</span>
             </label>
             <input
@@ -146,20 +156,34 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
                 const value = e.target.value;
                 // WHY: Only allow valid decimal numbers
                 if (value === "" || /^\d*\.?\d*$/.test(value)) {
+                  const numericValue =
+                    value === "" ? 0 : parseFloat(value || "0");
+
                   setDisplayValues((prev) => ({
                     ...prev,
                     currentBalance: value,
                   }));
                   setFormData((prev) => ({
                     ...prev,
-                    currentBalance: value === "" ? 0 : parseFloat(value || "0"),
+                    currentBalance: numericValue,
                   }));
-                  if (errors.currentBalance) {
-                    setErrors((prev) => ({
-                      ...prev,
-                      currentBalance: undefined,
-                    }));
-                  }
+
+                  // Clear all current balance related errors
+                  setErrors((prev) => {
+                    const newErrors = { ...prev };
+                    delete newErrors.currentBalance;
+
+                    // Only check max balance validation if there is a max balance set
+                    if (
+                      formData.hasMaxBalance &&
+                      numericValue > formData.maxBalance
+                    ) {
+                      newErrors.currentBalance =
+                        "Current balance cannot exceed maximum balance";
+                    }
+
+                    return newErrors;
+                  });
                 }
               }}
               onFocus={(e) => e.target.select()}
@@ -177,7 +201,7 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
           {/* WHY: Accrual rate needs similar decimal handling to current balance
               NOTE: This could be refactored to share logic with current balance input */}
           <div>
-            <label className="block mb-2">
+            <label className="block mb-2 text-left">
               Accrual Rate (hours per period){" "}
               <span className="text-red-500">*</span>
             </label>
@@ -199,11 +223,9 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
                     ...prev,
                     accrualRate: value === "" ? 0 : parseFloat(value || "0"),
                   }));
-                  if (errors.accrualRate) {
-                    setErrors((prev) => ({
-                      ...prev,
-                      accrualRate: undefined,
-                    }));
+                  // Clear the error when value is valid
+                  if (value !== "") {
+                    setErrors((prev) => ({ ...prev, accrualRate: undefined }));
                   }
                 }
               }}
@@ -220,7 +242,7 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
           {/* WHY: Different companies have different pay period schedules
               WHAT: Simple select for accrual period configuration */}
           <div>
-            <label className="block mb-2">
+            <label className="block mb-2 text-left">
               Accrual Period Type <span className="text-red-500">*</span>
             </label>
             <select
@@ -250,7 +272,7 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
               WHAT: Date picker limited to past dates
               NOTE: Uses ISO string split to handle date-only value */}
           <div>
-            <label className="block mb-2">
+            <label className="block mb-2 text-left">
               Last Accrual Date <span className="text-red-500">*</span>
             </label>
             <input
@@ -278,7 +300,9 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
               WHAT: Optional numeric input that toggles max rollover functionality
               NOTE: Empty value means no maximum (converts to Infinity) */}
           <div>
-            <label className="block mb-2">Maximum Rollover Hours</label>
+            <label className="block mb-2 text-left">
+              Maximum Rollover Hours
+            </label>
             <input
               type="number"
               inputMode="numeric"
@@ -293,12 +317,7 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
                   hasMaxRollover: value !== "",
                 }));
 
-                if (value === "") {
-                  setErrors((prev) => {
-                    const { maxRollover, ...rest } = prev;
-                    return rest;
-                  });
-                } else if (parsedValue < 0) {
+                if (parsedValue < 0) {
                   setErrors((prev) => ({
                     ...prev,
                     maxRollover: "Maximum rollover cannot be negative",
@@ -312,11 +331,6 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
                     maxRollover:
                       "Maximum rollover cannot exceed maximum balance",
                   }));
-                } else {
-                  setErrors((prev) => {
-                    const { maxRollover, ...rest } = prev;
-                    return rest;
-                  });
                 }
               }}
               onFocus={(e) => e.target.select()}
@@ -334,7 +348,7 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
               WHAT: Optional numeric input that toggles max balance functionality
               NOTE: Empty value means no maximum (converts to Infinity) */}
           <div>
-            <label className="block mb-2">Maximum Balance</label>
+            <label className="block mb-2 text-left">Maximum Balance</label>
             <input
               type="number"
               inputMode="numeric"
@@ -349,35 +363,29 @@ export const SettingsForm: React.FC<SettingsFormProps> = ({
                   hasMaxBalance: value !== "",
                 }));
 
-                if (value === "") {
-                  setErrors((prev) => {
-                    const { maxBalance, currentBalance, ...rest } = prev;
-                    return rest;
-                  });
-                } else if (parsedValue < 0) {
-                  setErrors((prev) => ({
-                    ...prev,
-                    maxBalance: "Maximum balance cannot be negative",
-                  }));
-                } else {
-                  // WHY: Need to validate current balance against new maximum
-                  // WHAT: Clears maxBalance error and checks current balance
-                  setErrors((prev) => {
-                    const { maxBalance, ...rest } = prev;
+                // Clear existing max balance error
+                setErrors((prev) => {
+                  const newErrors = { ...prev };
+                  delete newErrors.maxBalance;
+                  delete newErrors.currentBalance; // Clear current balance error since we're re-validating it
 
-                    if (formData.currentBalance > parsedValue) {
-                      return {
-                        ...rest,
-                        currentBalance:
-                          "Current balance cannot exceed maximum balance",
-                      };
+                  // Only validate if there's a max balance set
+                  if (value !== "") {
+                    if (parsedValue < 0) {
+                      newErrors.maxBalance =
+                        "Maximum balance cannot be negative";
+                    } else if (formData.currentBalance > parsedValue) {
+                      newErrors.currentBalance =
+                        "Current balance cannot exceed maximum balance";
                     }
+                  }
 
-                    // If all good, remove currentBalance error too
-                    const { currentBalance, ...finalRest } = rest;
-                    return finalRest;
-                  });
-                }
+                  console.log(
+                    "New errors after max balance change:",
+                    newErrors
+                  ); // Add this to debug
+                  return newErrors;
+                });
               }}
               onFocus={(e) => e.target.select()}
               className={`w-full p-2 border rounded [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
