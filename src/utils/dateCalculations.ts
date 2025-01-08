@@ -1,21 +1,49 @@
-// WHY: Centralizes all date-related calculations to ensure consistent handling of PTO periods
-// WHAT: Provides core date manipulation functions for PTO accrual and business day calculations
-// NOTE: All dates are passed as strings to avoid timezone issues across the application
+// WHY: Need consistent date handling without timezone issues
+// WHAT: Provides core date manipulation utilities using YYYY-MM-DD strings
+// NOTE: Avoids timezone shifts by working with UTC dates when needed
 
 import { AccrualPeriodType } from "../types";
 
-// WHY: Different companies have different accrual schedules (weekly, biweekly, or semi-monthly)
-// WHAT: Calculates when the next PTO accrual will occur based on the last accrual date
-// NOTE: For semi-monthly, accruals occur on the 1st and 15th of each month
+// WHY: Need to safely create a Date object from YYYY-MM-DD without timezone shift
+// WHAT: Creates a Date object set to noon UTC on the specified date
+// NOTE: Using noon UTC ensures we avoid any date boundary issues
+export const createDateFromYMD = (dateString: string): Date => {
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+};
+
+// WHY: Need to safely convert a Date back to YYYY-MM-DD
+// WHAT: Converts a Date object to YYYY-MM-DD string using UTC
+export const toDateString = (date: Date): string => {
+  return date.toISOString().split('T')[0];
+};
+
+// WHY: Many operations need today's date as a reference point
+// WHAT: Gets current date in YYYY-MM-DD format
+export const getTodayString = (): string => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+// WHY: Dates need to be displayed in user-friendly format
+// WHAT: Converts YYYY-MM-DD string to localized date string
+export const formatDate = (dateString: string): string => {
+  // Use createDateFromYMD to avoid timezone issues
+  return createDateFromYMD(dateString).toLocaleDateString();
+};
+
+// WHY: Different companies have different accrual schedules
+// WHAT: Calculates next accrual date based on last accrual date
 export const calculateNextAccrualDate = (
   lastAccrualDate: string,
   accrualPeriodType: AccrualPeriodType
-): Date => {
-  const lastAccrual = new Date(lastAccrualDate);
+): string => {
+  const lastAccrual = createDateFromYMD(lastAccrualDate);
   const nextAccrual = new Date(lastAccrual);
 
-  // WHY: Each accrual type requires different date arithmetic
-  // NOTE: Semi-monthly requires special handling due to varying month lengths
   switch (accrualPeriodType) {
     case "weekly":
       nextAccrual.setDate(lastAccrual.getDate() + 7);
@@ -24,35 +52,59 @@ export const calculateNextAccrualDate = (
       nextAccrual.setDate(lastAccrual.getDate() + 14);
       break;
     case "semi-monthly":
-      // WHY: Semi-monthly periods are on 1st and 15th of each month
-      // NOTE: Need to handle month boundaries carefully
       if (lastAccrual.getDate() < 15) {
         nextAccrual.setDate(15);
       } else {
         nextAccrual.setDate(1);
-        nextAccrual.setMonth(nextAccrual.getMonth() + 1);
+        nextAccrual.setMonth(lastAccrual.getMonth() + 1);
       }
       break;
   }
 
-  return nextAccrual;
+  return toDateString(nextAccrual);
 };
 
-// WHY: Need to calculate how many accrual periods occur between two dates
-// WHAT: Returns the number of complete pay periods between start and end dates
-// NOTE: Semi-monthly periods use an approximation since months have different lengths
+// WHY: Weekend days are handled differently in PTO calculations
+// WHAT: Checks if a date falls on Saturday or Sunday
+export const isWeekend = (dateString: string): boolean => {
+  const date = createDateFromYMD(dateString);
+  const day = date.getDay();
+  return day === 0 || day === 6;
+};
+
+// WHY: Need to calculate business days between dates
+// WHAT: Returns array of business days between two dates
+export const getBusinessDaysBetweenDates = (
+  startDate: string,
+  endDate: string
+): string[] => {
+  const start = createDateFromYMD(startDate);
+  const end = createDateFromYMD(endDate);
+  const dates: string[] = [];
+
+  const current = new Date(start);
+  while (current <= end) {
+    const currentString = toDateString(current);
+    if (!isWeekend(currentString)) {
+      dates.push(currentString);
+    }
+    current.setDate(current.getDate() + 1);
+  }
+
+  return dates;
+};
+
+// WHY: Need to calculate number of accrual periods between dates
+// WHAT: Returns number of complete periods between dates
 export const calculatePayPeriodsBetweenDates = (
   startDate: string,
   endDate: string,
   accrualPeriodType: AccrualPeriodType
 ): number => {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  const daysDifference =
-    (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+  const start = createDateFromYMD(startDate);
+  const end = createDateFromYMD(endDate);
+  const daysDifference = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
 
-  // WHY: Different period types require different day-count calculations
-  // NOTE: Semi-monthly uses 15.2 days as average (365/24 periods per year)
   switch (accrualPeriodType) {
     case "weekly":
       return Math.floor(daysDifference / 7);
@@ -61,42 +113,4 @@ export const calculatePayPeriodsBetweenDates = (
     case "semi-monthly":
       return Math.floor(daysDifference / 15.2);
   }
-};
-
-// WHY: Weekend days are handled differently in PTO calculations
-// WHAT: Simple helper to check if a date falls on Saturday or Sunday
-export const isWeekend = (date: Date): boolean => {
-  const day = date.getDay();
-  return day === 0 || day === 6;
-};
-
-// WHY: PTO is typically only counted for business days
-// WHAT: Returns an array of business days between two dates
-// NOTE: Excludes weekends but does not account for holidays
-export const getBusinessDaysBetweenDates = (
-  startDate: string,
-  endDate: string
-): Date[] => {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  const dates: Date[] = [];
-
-  const current = new Date(start);
-  while (current <= end) {
-    if (!isWeekend(current)) {
-      dates.push(new Date(current));
-    }
-    current.setDate(current.getDate() + 1);
-  }
-
-  return dates;
-};
-
-// WHY: Date formatting needs to handle timezone differences consistently
-// WHAT: Formats date string to localized date with timezone adjustment
-// NOTE: Adjusts for timezone to prevent off-by-one day errors
-export const formatDate = (dateString: string): string => {
-  const date = new Date(dateString);
-  date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
-  return date.toLocaleDateString();
 };

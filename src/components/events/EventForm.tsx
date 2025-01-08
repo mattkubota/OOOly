@@ -5,9 +5,15 @@
 import React, { useState } from "react";
 import { Calendar } from "lucide-react";
 import { PTOEvent, PTODay, DayType } from "../../types";
-import { isWeekend, formatDate } from "../../utils/dateCalculations";
+import {
+  toDateString,
+  getTodayString,
+  formatDate,
+  isWeekend,
+} from "../../utils/dateCalculations";
 
 // WHY: Component needs type-safe props to handle both creation and editing
+// NOTE: Includes support for editing existing events and overlap detection
 interface EventFormProps {
   onSubmit: (event: PTOEvent) => void; // Handler for form submission
   onCancel: () => void; // Handler for cancellation
@@ -29,7 +35,7 @@ export const EventForm: React.FC<EventFormProps> = ({
     startDate: initialEvent?.startDate || "",
     endDate: initialEvent?.endDate || "",
   });
-  const [days, setDays] = useState<PTODay[]>(initialEvent?.days || []);
+  const [days, setDays] = useState<PTODay[]>([]);
 
   // WHY: Day types need user-friendly labels for the UI
   // NOTE: Maps technical types to display-friendly strings
@@ -52,24 +58,24 @@ export const EventForm: React.FC<EventFormProps> = ({
   // WHAT: Checks if a new/edited event overlaps with existing events
   // NOTE: Excludes the current event when editing
   const checkOverlap = (newEvent: PTOEvent, existingEvents: PTOEvent[]) => {
-    const startDate = new Date(newEvent.startDate);
-    const endDate = new Date(newEvent.endDate || newEvent.startDate);
+    const start = new Date(newEvent.startDate);
+    const end = new Date(newEvent.endDate || newEvent.startDate);
 
     return existingEvents.some((event) => {
       if (event.created === initialEvent?.created) return false;
       const eventStart = new Date(event.startDate);
       const eventEnd = new Date(event.endDate || event.startDate);
       return (
-        (startDate >= eventStart && startDate <= eventEnd) ||
-        (endDate >= eventStart && endDate <= eventEnd) ||
-        (startDate <= eventStart && endDate >= eventEnd)
+        (start >= eventStart && start <= eventEnd) ||
+        (end >= eventStart && end <= eventEnd) ||
+        (start <= eventStart && end >= eventEnd)
       );
     });
   };
 
   // WHY: Need to handle date selection and generate day entries
   // WHAT: Validates dates and creates initial day configurations
-  // NOTE: Handles both single-day and multi-day events
+  // NOTE: Handles both single-day and multi-day events using YYYY-MM-DD strings
   const handleDateSubmit = () => {
     if (dates.startDate) {
       const potentialEvent = {
@@ -78,7 +84,7 @@ export const EventForm: React.FC<EventFormProps> = ({
         endDate: dates.endDate || dates.startDate,
         days: [],
         totalHours: 0,
-        created: initialEvent?.created || new Date().toISOString(),
+        created: initialEvent?.created || getTodayString(),
       };
 
       // WHY: Prevent double-booking time off
@@ -89,33 +95,21 @@ export const EventForm: React.FC<EventFormProps> = ({
         return;
       }
 
-      // WHY: Need precise date handling for correct day generation
-      // NOTE: Explicitly handle month index (0-based in JS)
-      const [year, month, day] = dates.startDate.split("-").map(Number);
-      const start = new Date(year, month - 1, day);
-
-      const end = dates.endDate
-        ? (() => {
-            const [endYear, endMonth, endDay] = dates.endDate
-              .split("-")
-              .map(Number);
-            return new Date(endYear, endMonth - 1, endDay);
-          })()
-        : start;
-
       // WHY: Need to generate day entries for the entire date range
       // WHAT: Creates a PTODay entry for each day in the range
+      const start = new Date(dates.startDate);
+      const end = dates.endDate ? new Date(dates.endDate) : start;
       const newDays: PTODay[] = [];
-      const current = new Date(start);
 
+      const current = new Date(start);
       while (current <= end) {
-        const dayIsWeekend = isWeekend(current);
+        const currentDateString = toDateString(current);
+        const dayIsWeekend = isWeekend(currentDateString);
         newDays.push({
-          date: new Date(current),
+          date: currentDateString,
           type: dayIsWeekend ? "weekend" : "full",
           isWeekend: dayIsWeekend,
         });
-
         current.setDate(current.getDate() + 1);
       }
 
@@ -126,7 +120,7 @@ export const EventForm: React.FC<EventFormProps> = ({
 
   // WHY: Need to accurately calculate PTO hours based on day types
   // WHAT: Sums hours for non-weekend, non-holiday days
-  // NOTE: Adjusts for timezone to ensure consistent date handling
+  // NOTE: Full days count as 8 hours, half days as 4 hours
   const calculateTotalHours = () => {
     return days.reduce((total, day) => {
       if (day.isWeekend || day.type === "holiday") return total;
@@ -144,7 +138,7 @@ export const EventForm: React.FC<EventFormProps> = ({
       endDate: dates.endDate || dates.startDate,
       days,
       totalHours: calculateTotalHours(),
-      created: initialEvent?.created || new Date().toISOString(),
+      created: initialEvent?.created || getTodayString(),
     };
     onSubmit(event);
   };
@@ -157,7 +151,7 @@ export const EventForm: React.FC<EventFormProps> = ({
         {/* WHY: Header needs visual indicator of purpose */}
         <div className="flex items-center gap-2 mb-4">
           <Calendar className="h-6 w-6 text-blue-500" />
-          <h2 className="text-xl font-semibold">Plan OOO</h2>
+          <h2 className="text-xl font-semibold">Plan Time Off</h2>
         </div>
 
         {/* WHY: Event name input needs clear labeling and validation */}
@@ -194,7 +188,7 @@ export const EventForm: React.FC<EventFormProps> = ({
   // WHY: Date selection needs validation and range support
   // WHAT: Step 2 - Date range selection with validation
   if (currentStep === 2) {
-    const today = new Date().toISOString().split("T")[0];
+    const today = getTodayString();
     const validEndDate = dates.startDate ? dates.startDate : today;
     const isEndDateValid = !dates.endDate || dates.endDate >= dates.startDate;
 
@@ -277,14 +271,13 @@ export const EventForm: React.FC<EventFormProps> = ({
 
   // WHY: Final step needs day-by-day configuration
   // WHAT: Step 3 - Configure individual days and show total hours
+  // NOTE: Different styling for weekends vs workdays
   return (
     <div className="p-6 max-w-sm mx-auto bg-white rounded-xl shadow-lg space-y-4">
       <h2 className="text-xl font-semibold">Configure Days</h2>
       <p className="text-gray-600">{eventName}</p>
 
       <div className="space-y-4">
-        {/* WHY: Each day needs individual configuration options
-            NOTE: Different styling for weekends vs workdays */}
         {days.map((day, index) => (
           <div
             key={index}
@@ -296,14 +289,7 @@ export const EventForm: React.FC<EventFormProps> = ({
                 : "bg-white border"
             }`}
           >
-            <span className="flex items-center gap-2">
-              <span>{formatDate(day.date.toISOString())}</span>
-              {day.isWeekend && (
-                <span className="text-sm px-2 py-1 bg-gray-200 rounded text-gray-600">
-                  Weekend
-                </span>
-              )}
-            </span>
+            <span>{formatDate(day.date)}</span>
             {!day.isWeekend && (
               <select
                 value={day.type}
@@ -331,7 +317,6 @@ export const EventForm: React.FC<EventFormProps> = ({
           </p>
         </div>
 
-        {/* WHY: Final step needs clear submission action */}
         <div className="flex gap-2">
           <button
             onClick={() => setCurrentStep(2)}

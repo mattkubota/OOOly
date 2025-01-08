@@ -4,7 +4,7 @@
 
 import React from "react";
 import { PTOSettings } from "../../types";
-import { calculateNextAccrualDate } from "../../utils/dateCalculations";
+import { calculateNextAccrualDate, formatDate } from "../../utils/dateCalculations";
 
 interface SummaryCardsProps {
   settings: PTOSettings; // Current PTO settings for display
@@ -15,6 +15,14 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({ settings }) => {
   // WHAT: Handles singular/plural forms of words
   const pluralize = (num: number, word: string) =>
     `${num} ${word}${num === 1 ? "" : "s"}`;
+
+  // WHY: Need to calculate and format next accrual date
+  // WHAT: Gets next accrual as YYYY-MM-DD string and formats for display
+  const nextAccrualDate = calculateNextAccrualDate(
+    settings.lastAccrualDate,
+    settings.accrualPeriodType
+  );
+  const formattedNextAccrualDate = formatDate(nextAccrualDate);
 
   // WHY: Key metrics need equal visual weight and clear separation
   // WHAT: Grid layout with responsive breakpoints and dividers
@@ -54,10 +62,7 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({ settings }) => {
             Next Accrual
           </h2>
           <div className="text-lg sm:text-2xl font-bold">
-            {calculateNextAccrualDate(
-              settings.lastAccrualDate,
-              settings.accrualPeriodType
-            ).toLocaleDateString()}
+            {formattedNextAccrualDate}
           </div>
         </div>
       </div>
