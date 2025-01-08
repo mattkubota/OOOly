@@ -81,50 +81,9 @@ const App: React.FC = () => {
     deleteEvent(eventToDelete);
   };
 
-  // WHY: Conditional rendering pattern handles different application states
-  // NOTE: This approach provides a clear hierarchy of views:
-  // 1. First-time setup
-  // 2. Settings modal
-  // 3. Event form modal
-  // 4. Main dashboard
-  if (!settings) {
-    return (
-      <div className="max-w-4xl mx-auto p-6">
-        <h2 className="text-xl font-semibold mb-4 text-center">
-          Welcome to OOOly
-        </h2>
-        <p className="mb-4 text-center">
-          Please set up your OOO benefit details to get started.
-        </p>
-        <SettingsForm onSave={handleSaveSettings} />
-      </div>
-    );
-  }
-
-  if (showSettings) {
-    return (
-      <SettingsForm onSave={handleSaveSettings} initialSettings={settings} />
-    );
-  }
-
-  if (showEventForm) {
-    return (
-      <EventForm
-        onSubmit={handleSaveEvent}
-        onCancel={() => {
-          setShowEventForm(false);
-          setEditingEvent(undefined);
-        }}
-        initialEvent={editingEvent}
-        existingEvents={events}
-      />
-    );
-  }
-
-  // WHY: Main dashboard view combines all primary UI components
-  // NOTE: Layout uses Tailwind's max-width and auto margins for responsive design
-  return (
-    <div className="max-w-4xl mx-auto p-6">
+  // WHY: Helper function to render the main dashboard content
+  const renderDashboard = () => (
+    <>
       <DashboardHeader
         onOpenSettings={() => setShowSettings(true)}
         onAddEvent={() => {
@@ -133,11 +92,11 @@ const App: React.FC = () => {
         }}
       />
 
-      <SummaryCards settings={settings} />
+      <SummaryCards settings={settings!} />
 
       <EventsList
         events={events}
-        settings={settings}
+        settings={settings!}
         onAddFirst={() => {
           setEditingEvent(undefined);
           setShowEventForm(true);
@@ -145,6 +104,37 @@ const App: React.FC = () => {
         onEdit={handleEditEvent}
         onDelete={handleDeleteEvent}
       />
+    </>
+  );
+
+  // WHY: Single return statement with conditional rendering
+  return (
+    <div className="max-w-4xl mx-auto p-6">
+      {!settings ? (
+        <>
+          <h2 className="text-xl font-semibold mb-4 text-center">
+            Welcome to OOOly
+          </h2>
+          <p className="mb-4 text-center">
+            Please set up your OOO benefit details to get started.
+          </p>
+          <SettingsForm onSave={handleSaveSettings} />
+        </>
+      ) : showSettings ? (
+        <SettingsForm onSave={handleSaveSettings} initialSettings={settings} />
+      ) : showEventForm ? (
+        <EventForm
+          onSubmit={handleSaveEvent}
+          onCancel={() => {
+            setShowEventForm(false);
+            setEditingEvent(undefined);
+          }}
+          initialEvent={editingEvent}
+          existingEvents={events}
+        />
+      ) : (
+        renderDashboard()
+      )}
       <Analytics />
     </div>
   );
