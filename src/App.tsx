@@ -4,7 +4,7 @@
 
 import React, { useState, useEffect } from "react";
 import "./App.css";
-import { Analytics } from "@vercel/analytics/react"
+import { Analytics } from "@vercel/analytics/react";
 
 // WHY: Separated dashboard components to maintain single responsibility principle
 // NOTE: Component structure mirrors the three main functional areas: dashboard, settings, and events
@@ -13,6 +13,7 @@ import { SummaryCards } from "./components/dashboard/SummaryCards";
 import { EventsList } from "./components/dashboard/EventsList";
 import { SettingsForm } from "./components/settings/SettingsForm";
 import { EventForm } from "./components/events/EventForm";
+import { Footer } from "./components/Footer";
 
 // WHY: Custom hooks abstract PTO-specific business logic away from the UI component
 import { usePTOEvents } from "./hooks/usePtoEvents";
@@ -109,33 +110,39 @@ const App: React.FC = () => {
 
   // WHY: Single return statement with conditional rendering
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      {!settings ? (
-        <>
-          <h2 className="text-xl font-semibold mb-4 text-center">
-            Welcome to OOOly
-          </h2>
-          <p className="mb-4 text-center">
-            Please set up your OOO benefit details to get started.
-          </p>
-          <SettingsForm onSave={handleSaveSettings} />
-        </>
-      ) : showSettings ? (
-        <SettingsForm onSave={handleSaveSettings} initialSettings={settings} />
-      ) : showEventForm ? (
-        <EventForm
-          onSubmit={handleSaveEvent}
-          onCancel={() => {
-            setShowEventForm(false);
-            setEditingEvent(undefined);
-          }}
-          initialEvent={editingEvent}
-          existingEvents={events}
-        />
-      ) : (
-        renderDashboard()
-      )}
-      <Analytics />
+    <div className="max-w-4xl mx-auto p-6 min-h-screen flex flex-col">
+      <div className="flex-grow">
+        {!settings ? (
+          <>
+            <h2 className="text-xl font-semibold mb-4 text-center">
+              Welcome to OOOly 🌴
+            </h2>
+            <p className="mb-4 text-center">
+              Please set up your OOO benefit details to get started.
+            </p>
+            <SettingsForm onSave={handleSaveSettings} />
+          </>
+        ) : showSettings ? (
+          <SettingsForm
+            onSave={handleSaveSettings}
+            initialSettings={settings}
+          />
+        ) : showEventForm ? (
+          <EventForm
+            onSubmit={handleSaveEvent}
+            onCancel={() => {
+              setShowEventForm(false);
+              setEditingEvent(undefined);
+            }}
+            initialEvent={editingEvent}
+            existingEvents={events}
+          />
+        ) : (
+          renderDashboard()
+        )}
+        <Analytics />
+      </div>
+      <Footer />
     </div>
   );
 };

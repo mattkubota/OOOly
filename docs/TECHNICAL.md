@@ -1,7 +1,6 @@
 # OOOly - PTO Tracking Application Documentation
 
 ## Table of Contents
-
 1. [Project Overview](#project-overview)
 2. [Getting Started](#getting-started)
 3. [Application Structure](#application-structure)
@@ -17,7 +16,6 @@
 ## Project Overview
 
 OOOly is a web application for tracking and managing Paid Time Off (PTO). It features:
-
 - Local storage for data persistence
 - PTO balance tracking and calculations
 - Event planning with conflict detection
@@ -26,12 +24,10 @@ OOOly is a web application for tracking and managing Paid Time Off (PTO). It fea
 ## Getting Started
 
 ### Prerequisites
-
 - Node.js
 - npm or yarn
 
 ### Quick Start
-
 1. Clone the repository
 2. Install dependencies: `npm install`
 3. Start development server: `npm run dev`
@@ -41,9 +37,16 @@ OOOly is a web application for tracking and managing Paid Time Off (PTO). It fea
 ```
 src/
 ├── components/           # React components
+│   ├── Footer.tsx      # Application footer component
 │   ├── dashboard/       # Dashboard-related components
+│   │   ├── DashboardHeader.tsx
+│   │   ├── EventsList.tsx
+│   │   └── SummaryCards.tsx
 │   ├── events/         # Event management components
+│   │   ├── EventCard.tsx
+│   │   └── EventForm.tsx
 │   └── settings/       # Settings components
+│       └── SettingsForm.tsx
 ├── hooks/              # Custom React hooks
 ├── types/              # TypeScript type definitions
 ├── utils/              # Utility functions
@@ -53,21 +56,18 @@ src/
 ## Core Features
 
 ### 1. PTO Settings Management
-
 - Current balance tracking
 - Accrual rate configuration
 - Maximum rollover settings
 - Maximum balance limits
 
 ### 2. Event Planning
-
 - Create/edit/delete PTO events
 - Date range selection
 - Conflict detection
 - Day type configuration (full/half/holiday)
 
 ### 3. Dashboard
-
 - Current PTO balance display
 - Next accrual date calculation
 - Upcoming events list
@@ -76,23 +76,18 @@ src/
 ## Technical Implementation
 
 ### Data Flow
-
 1. **Settings Management**
-
 ```typescript
 User Input → SettingsForm → LocalStorage → App State → Components
 ```
 
 2. **Event Management**
-
 ```typescript
 User Input → EventForm → Validation → LocalStorage → Dashboard Update
 ```
 
 ### State Management
-
 The application uses React's built-in state management with the following pattern:
-
 ```typescript
 // App.tsx - Main state management
 const [settings, setSettings] = useState<PTOSettings | null>(null);
@@ -101,12 +96,31 @@ const { events, addEvent, updateEvent, deleteEvent } = usePTOEvents(settings);
 
 ## Component Reference
 
+### Core Components
+
+#### Footer
+**Purpose:** Application-wide footer with attribution and links
+**Key Features:**
+- Author attribution with website link
+- GitHub repository link
+- Buy Me a Coffee integration
+- Responsive layout with subtle styling
+
+```typescript
+// Footer component - no props required
+export const Footer: React.FC = () => {
+  return (
+    <footer className="mt-8 py-4 text-center text-sm text-gray-500">
+      {/* Footer content */}
+    </footer>
+  );
+};
+```
+
 ### Dashboard Components
 
 #### DashboardHeader
-
 **Purpose:** Main navigation and action buttons
-
 ```typescript
 interface DashboardHeaderProps {
   onOpenSettings: () => void;
@@ -115,9 +129,7 @@ interface DashboardHeaderProps {
 ```
 
 #### SummaryCards
-
 **Purpose:** Display PTO metrics
-
 ```typescript
 interface SummaryCardsProps {
   settings: PTOSettings;
@@ -125,9 +137,7 @@ interface SummaryCardsProps {
 ```
 
 #### EventsList
-
 **Purpose:** Display and manage PTO events
-
 ```typescript
 interface EventsListProps {
   events: PTOEvent[];
@@ -141,20 +151,16 @@ interface EventsListProps {
 ### Form Components
 
 #### EventForm
-
 **Purpose:** Create/edit PTO events
 **Key Features:**
-
 - Multi-step form process
 - Date validation
 - Conflict checking
 - Day type configuration
 
 #### SettingsForm
-
 **Purpose:** Configure PTO settings
 **Key Features:**
-
 - Input validation
 - Maximum limits configuration
 - Accrual settings

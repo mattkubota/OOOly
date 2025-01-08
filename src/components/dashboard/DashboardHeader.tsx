@@ -21,7 +21,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   // NOTE: mb-8 provides consistent vertical rhythm with other components
   return (
     <div className="flex justify-between items-center mb-8">
-      <h1 className="text-2xl font-bold">OOOly</h1>
+      <h1 className="text-2xl font-bold">🌴 OOOly</h1>
 
       {/* WHY: Action buttons need proper spacing and hover states
           WHAT: Container for action buttons with consistent spacing
