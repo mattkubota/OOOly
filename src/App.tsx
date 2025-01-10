@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/next"
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 // WHY: Separated dashboard components to maintain single responsibility principle
 // NOTE: Component structure mirrors the three main functional areas: dashboard, settings, and events
@@ -142,7 +142,7 @@ const App: React.FC = () => {
           renderDashboard()
         )}
         <Analytics />
-        <SpeedInsights/>
+        <SpeedInsights />
       </div>
       <Footer />
     </div>
