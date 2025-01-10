@@ -5,15 +5,17 @@ export const Footer: React.FC = () => {
     <footer className="mt-8 py-4 text-center text-sm text-gray-500">
       <div className="flex flex-col items-center justify-center gap-3">
         <div className="flex items-center gap-2">
-          <span>Built by</span>
-          <a
-            href="https://mattkubota.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:text-blue-800 transition-colors"
-          >
-            Matt Kubota
-          </a>
+          <span>
+            Built by&nbsp;
+            <a
+              href="https://mattkubota.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:text-blue-800 transition-colors"
+            >
+              Matt Kubota
+            </a>
+          </span>
           <a
             href="https://github.com/mattkubota/OOOly"
             target="_blank"
